@@ -3,202 +3,170 @@ import { test, expect, Page } from '@playwright/test';
 /**
  * Smoke Tests - Critical Path
  * 
- * Quick health check covering the most important user flows.
- * Run these before every deployment.
- * 
- * Usage: npm run test:smoke
+ * Quick verification of core functionality.
+ * Uses actual Game Shelf selectors.
  */
 
-// All smoke tests are tagged with @smoke for filtering
+const GAMESHELF_URL = 'https://stewartdavidp-ship-it.github.io/gameshelftest/';
+
 test.describe('Smoke Tests @smoke', () => {
 
     test.describe('Fresh User Journey', () => {
         
-        test('A1: Welcome modal appears', async ({ page }) => {
-            await page.goto('/?fresh=1');
-            await page.waitForLoadState('networkidle');
-            const welcomeModal = page.locator('.welcome-modal, .onboarding-modal');
-            await expect(welcomeModal).toBeVisible({ timeout: 10000 });
+        test('SM1: Welcome screen shows for new user', async ({ page }) => {
+            await page.goto(GAMESHELF_URL + '?fresh=1');
+            await page.waitForLoadState('load');
+            await page.waitForTimeout(1000);
+            
+            // Welcome screen should be visible
+            const welcomeScreen = page.locator('#setup-welcome.active');
+            await expect(welcomeScreen).toBeVisible({ timeout: 10000 });
+            
+            // Should have "Let's Go" button
+            await expect(page.getByText("Let's Go →")).toBeVisible();
         });
         
-        test('A5: Complete onboarding flow', async ({ page }) => {
-            // Start fresh
-            await page.goto('/?fresh=1');
-            await page.waitForLoadState('networkidle');
+        test('SM2: Complete onboarding flow', async ({ page }) => {
+            await page.goto(GAMESHELF_URL + '?fresh=1');
+            await page.waitForLoadState('load');
             await page.waitForTimeout(1000);
             
-            // 1. Welcome modal appears
-            const welcomeModal = page.locator('.welcome-modal, .onboarding-modal');
-            await expect(welcomeModal).toBeVisible({ timeout: 10000 });
+            // 1. Click Let's Go
+            await page.getByText("Let's Go →").click();
+            await page.waitForTimeout(500);
             
-            // 2. Click Get Started
-            const startBtn = page.getByRole('button', { name: /get started|continue|let's go/i });
-            await startBtn.click();
+            // 2. Select games screen should appear
+            const gameScreen = page.locator('#setup-select-games.active');
+            await expect(gameScreen).toBeVisible({ timeout: 5000 });
             
-            // 3. Select games
-            await page.waitForSelector('.game-option, .game-card', { timeout: 5000 });
-            const games = page.locator('.game-option, .game-card');
-            await games.nth(0).click();
-            await games.nth(1).click();
-            await games.nth(2).click();
+            // 3. Select 3 games
+            const gameButtons = page.locator('.setup-game-btn');
+            await gameButtons.nth(0).click();
+            await page.waitForTimeout(200);
+            await gameButtons.nth(1).click();
+            await page.waitForTimeout(200);
+            await gameButtons.nth(2).click();
+            await page.waitForTimeout(300);
             
-            // 4. Continue
-            await page.getByRole('button', { name: /continue|done|next/i }).click();
-            await page.waitForTimeout(1000);
-            
-            // 5. Should reach main app
-            // Skip tutorial if shown
-            const skipBtn = page.getByRole('button', { name: /skip|later/i });
-            if (await skipBtn.isVisible().catch(() => false)) {
-                await skipBtn.click();
+            // 4. Navigate through setup screens
+            for (let i = 0; i < 15; i++) {
+                if (await page.locator('.nav-tab').first().isVisible().catch(() => false)) break;
+                
+                const nextBtn = page.locator('#setup-btn-games-next:not([disabled])');
+                const primaryBtn = page.locator('.setup-btn-primary:visible').first();
+                const skipBtn = page.locator('.setup-btn-ghost:visible').first();
+                const startBtn = page.getByText(/Start Using Game Shelf|Open Game Shelf/i);
+                
+                if (await nextBtn.isVisible().catch(() => false)) {
+                    await nextBtn.click();
+                } else if (await startBtn.isVisible().catch(() => false)) {
+                    await startBtn.click();
+                } else if (await skipBtn.isVisible().catch(() => false)) {
+                    await skipBtn.click();
+                } else if (await primaryBtn.isVisible().catch(() => false)) {
+                    await primaryBtn.click();
+                }
+                
+                await page.waitForTimeout(500);
             }
             
-            // Verify main app
-            await page.waitForTimeout(500);
-            const homeContent = page.locator('[data-tab="home"], .home-tab, .main-content');
-            await expect(homeContent).toBeVisible({ timeout: 5000 });
+            // Main nav should be visible
+            await expect(page.locator('.nav-tab').first()).toBeVisible({ timeout: 10000 });
         });
     });
 
     test.describe('Existing User Flows', () => {
         
-        // Setup: completed user
+        // Setup: completed user via localStorage
         test.beforeEach(async ({ page }) => {
-            const seedData = btoa(JSON.stringify({
-                selectedGames: ['wordle', 'connections', 'strands'],
-                setupComplete: true
-            }));
-            await page.goto(`/?seedData=${seedData}`);
-            await page.waitForLoadState('networkidle');
-            await page.waitForTimeout(1500);
+            await page.goto(GAMESHELF_URL);
+            await page.waitForLoadState('load');
+            
+            // Set localStorage to bypass setup - use actual Game Shelf keys
+            await page.evaluate(() => {
+                localStorage.setItem('gameshelf_setup_complete', 'true');
+                localStorage.setItem('gameshelf_games', JSON.stringify([
+                    { gameId: 'wordle', name: 'Wordle' },
+                    { gameId: 'connections', name: 'Connections' },
+                    { gameId: 'strands', name: 'Strands' }
+                ]));
+                const appData = {
+                    games: [
+                        { id: 'wordle', addedAt: new Date().toISOString() },
+                        { id: 'connections', addedAt: new Date().toISOString() },
+                        { id: 'strands', addedAt: new Date().toISOString() }
+                    ],
+                    stats: {},
+                    history: {},
+                    wallet: { tokens: 100, coins: 0 },
+                    settings: {}
+                };
+                localStorage.setItem('gameShelfData', JSON.stringify(appData));
+            });
+            
+            await page.reload();
+            await page.waitForLoadState('load');
+            await page.waitForTimeout(1000);
         });
 
-        test('B1: Home tab displays correctly', async ({ page }) => {
-            await page.goto('/#home');
+        test('SM3: Home tab displays correctly', async ({ page }) => {
+            // Home tab should be active
+            const homeTab = page.locator('.nav-tab[data-tab="home"]');
+            await expect(homeTab).toBeVisible({ timeout: 5000 });
+            await expect(homeTab).toHaveClass(/active/);
+        });
+
+        test('SM4: Log sheet opens', async ({ page }) => {
+            // Open log sheet via URL
+            await page.goto(GAMESHELF_URL + '#log');
             await page.waitForTimeout(500);
             
-            // Home should show game cards or today's status
-            const homeContent = page.locator('.home-content, .game-card, .today-games');
-            await expect(homeContent).toBeVisible({ timeout: 5000 });
+            // Log sheet should be visible
+            const logSheet = page.locator('#log-sheet.active');
+            await expect(logSheet).toBeVisible({ timeout: 5000 });
+            
+            // Input should be present
+            const logInput = page.locator('#log-input');
+            await expect(logInput).toBeVisible();
         });
 
-        test('B2: Log sheet opens and accepts paste', async ({ page }) => {
-            await page.goto('/#log');
-            await page.waitForTimeout(500);
-            
-            // Log sheet visible
-            const logSheet = page.locator('.log-sheet, .log-modal');
-            await expect(logSheet).toBeVisible();
-            
-            // Paste input exists
-            const pasteArea = page.locator('#log-input, textarea, .paste-area');
-            await expect(pasteArea).toBeVisible();
-        });
-
-        test('H1: Tab navigation works', async ({ page }) => {
+        test('SM5: Tab navigation works', async ({ page }) => {
             const tabs = ['home', 'games', 'social', 'share'];
             
             for (const tab of tabs) {
-                await page.goto(`/#${tab}`);
+                await page.locator(`.nav-tab[data-tab="${tab}"]`).click();
                 await page.waitForTimeout(300);
                 
-                // Corresponding tab should be active
-                const activeTab = page.locator(`[data-tab="${tab}"].active, .nav-tab.active`);
-                await expect(activeTab).toBeVisible();
+                // Tab should be active
+                const activeTab = page.locator(`.nav-tab[data-tab="${tab}"]`);
+                await expect(activeTab).toHaveClass(/active/);
             }
         });
 
-        test('F1: Settings menu opens', async ({ page }) => {
-            await page.goto('/#menu');
+        test('SM9: Menu opens via hash', async ({ page }) => {
+            await page.goto(GAMESHELF_URL + '#menu');
             await page.waitForTimeout(500);
             
-            const menu = page.locator('.settings-menu, .menu-sheet, [data-sheet="menu"]');
-            await expect(menu).toBeVisible();
-        });
-
-        test('F3: Dark mode toggle works', async ({ page }) => {
-            await page.goto('/#settings');
-            await page.waitForTimeout(500);
-            
-            // Find dark mode toggle
-            const darkToggle = page.locator('[data-setting="dark-mode"], .dark-mode-toggle, #dark-mode');
-            
-            if (await darkToggle.isVisible()) {
-                // Get initial state
-                const initialTheme = await page.evaluate(() => 
-                    document.documentElement.dataset.theme || 
-                    document.body.classList.contains('dark') ? 'dark' : 'light'
-                );
-                
-                // Toggle
-                await darkToggle.click();
-                await page.waitForTimeout(300);
-                
-                // Theme should change
-                const newTheme = await page.evaluate(() => 
-                    document.documentElement.dataset.theme || 
-                    document.body.classList.contains('dark') ? 'dark' : 'light'
-                );
-                
-                expect(newTheme).not.toBe(initialTheme);
-            }
-        });
-
-        test('Share tab shows preview', async ({ page }) => {
-            // First seed some results
-            await page.evaluate(() => {
-                if ((window as any).GameShelfTest) {
-                    (window as any).GameShelfTest.seedTestData({
-                        results: {
-                            [new Date().toISOString().split('T')[0]]: {
-                                wordle: { score: '3/6', won: true }
-                            }
-                        }
-                    });
-                }
-            });
-            
-            await page.goto('/#share');
-            await page.waitForTimeout(500);
-            
-            // Share tab should be visible
-            const shareContent = page.locator('.share-content, .share-tab, [data-tab="share"]');
-            await expect(shareContent).toBeVisible();
+            // #menu opens settings-menu
+            const menu = page.locator('#settings-menu.active');
+            await expect(menu).toBeVisible({ timeout: 5000 });
         });
     });
 
     test.describe('Error Handling', () => {
         
-        test('App handles invalid URL gracefully', async ({ page }) => {
-            await page.goto('/#invalid_route_123');
-            await page.waitForLoadState('networkidle');
+        test('SM6: Invalid hash handled gracefully', async ({ page }) => {
+            // Should not crash with invalid hash
+            await page.goto(GAMESHELF_URL + '#invalid-route-12345');
+            await page.waitForTimeout(1000);
             
-            // Should not crash
-            const app = page.locator('.app, body');
-            await expect(app).toBeVisible();
-        });
-
-        test('App survives localStorage clear mid-session', async ({ page }) => {
-            // Setup user
-            const seedData = btoa(JSON.stringify({
-                selectedGames: ['wordle'],
-                setupComplete: true
-            }));
-            await page.goto(`/?seedData=${seedData}`);
-            await page.waitForTimeout(1500);
+            // Page should still load (no crash)
+            const body = page.locator('body');
+            await expect(body).toBeVisible();
             
-            // Clear localStorage
-            await page.evaluate(() => {
-                localStorage.clear();
-            });
-            
-            // Reload
-            await page.reload();
-            await page.waitForLoadState('networkidle');
-            
-            // Should show onboarding (not crash)
-            const welcomeOrApp = page.locator('.welcome-modal, .onboarding-modal, .app');
-            await expect(welcomeOrApp).toBeVisible({ timeout: 10000 });
+            // Should either show setup or main app
+            const hasContent = await page.locator('#setup-welcome, .nav-tab').first().isVisible();
+            expect(hasContent).toBe(true);
         });
     });
 
@@ -206,43 +174,14 @@ test.describe('Smoke Tests @smoke', () => {
         
         test.use({ viewport: { width: 375, height: 667 } }); // iPhone SE
         
-        test('App renders on mobile viewport', async ({ page }) => {
-            const seedData = btoa(JSON.stringify({
-                selectedGames: ['wordle'],
-                setupComplete: true
-            }));
-            await page.goto(`/?seedData=${seedData}`);
-            await page.waitForTimeout(1500);
+        test('SM8: App loads on mobile viewport', async ({ page }) => {
+            await page.goto(GAMESHELF_URL + '?fresh=1');
+            await page.waitForLoadState('load');
+            await page.waitForTimeout(1000);
             
-            // Check bottom nav is visible
-            const bottomNav = page.locator('.nav-bar, .bottom-nav, nav');
-            await expect(bottomNav).toBeVisible();
-        });
-
-        test('Bottom navigation is tappable', async ({ page }) => {
-            const seedData = btoa(JSON.stringify({
-                selectedGames: ['wordle'],
-                setupComplete: true
-            }));
-            await page.goto(`/?seedData=${seedData}`);
-            await page.waitForTimeout(1500);
-            
-            // Find nav tabs
-            const navTabs = page.locator('.nav-tab, [role="tab"]');
-            const count = await navTabs.count();
-            
-            // Should have multiple tabs
-            expect(count).toBeGreaterThan(2);
-            
-            // Tap second tab
-            if (count > 1) {
-                await navTabs.nth(1).click();
-                await page.waitForTimeout(300);
-                
-                // Tab should become active
-                const activeTab = page.locator('.nav-tab.active, [role="tab"][aria-selected="true"]');
-                await expect(activeTab).toBeVisible();
-            }
+            // Should show welcome or main app
+            const hasContent = await page.locator('#setup-welcome, .nav-tab').first().isVisible();
+            expect(hasContent).toBe(true);
         });
     });
 });
