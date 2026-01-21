@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Shelf Test Plan v3</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5;
+            --success: #22c55e; --warning: #f59e0b; --danger: #ef4444;
+            --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+            --gray-300: #d1d5db; --gray-500: #6b7280; --gray-700: #374151; --gray-900: #111827;
+            --bg-primary: #f3f4f6; --bg-secondary: #ffffff; --bg-tertiary: #f9fafb;
+            --text-primary: #111827; --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        
+        [data-theme="dark"] {
+            --gray-50: #1f2937; --gray-100: #111827; --gray-200: #374151;
+            --gray-300: #4b5563; --gray-500: #9ca3af; --gray-700: #d1d5db; --gray-900: #f9fafb;
+            --bg-primary: #111827; --bg-secondary: #1f2937; --bg-tertiary: #374151;
+            --text-primary: #f9fafb; --text-secondary: #9ca3af;
+            --border-color: #374151;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-100); color: var(--gray-900); line-height: 1.5; }
+        
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 100; }
+        .header-content { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .header-tabs { display: flex; gap: 4px; }
+        .header-tab { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .header-tab.active { background: rgba(255,255,255,0.3); }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; }
+        .admin-badge { background: var(--warning); color: #000; padding: 2px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; }
+        .header-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.7rem; }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 16px; }
+        
+        .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; }
+        .login-screen h2 { font-size: 1.4rem; margin-bottom: 8px; }
+        .login-screen p { color: var(--gray-500); margin-bottom: 20px; }
+        .google-btn { display: flex; align-items: center; gap: 10px; background: white; border: 1px solid var(--gray-300); padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .google-btn img { width: 18px; }
+        
+        .panel { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .panel h3 { font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .panel.admin { border: 2px solid var(--warning); }
+        .panel.debug { border: 2px solid var(--primary); }
+        
+        .tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--gray-200); padding-bottom: 8px; flex-wrap: wrap; }
+        .tab { padding: 6px 14px; background: none; border: none; font-size: 0.8rem; cursor: pointer; border-radius: 5px; color: var(--gray-500); }
+        .tab.active { background: var(--gray-100); color: var(--gray-900); font-weight: 500; }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.75rem; font-weight: 500; color: var(--gray-500); text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea { padding: 8px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.85rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; max-height: 250px; overflow-y: auto; padding: 10px; background: var(--gray-50); border-radius: 6px; }
+        .test-grid .section-header { grid-column: 1 / -1; font-weight: 600; font-size: 0.8rem; color: var(--gray-700); padding: 6px 0 2px; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; }
+        .test-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; cursor: pointer; }
+        .test-checkbox input { width: 14px; height: 14px; }
+        .select-all-btn { font-size: 0.65rem; padding: 2px 6px; background: var(--gray-200); border: none; border-radius: 4px; cursor: pointer; }
+        
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 0.7rem; }
+        
+        .assignment-list { display: flex; flex-direction: column; gap: 8px; }
+        .assignment-card { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--gray-50); border-radius: 6px; }
+        .assignment-card h4 { font-size: 0.85rem; }
+        .assignment-card p { font-size: 0.7rem; color: var(--gray-500); }
+        .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; }
+        
+        /* Playwright result badges */
+        .pw-badge { font-size: 0.65rem; margin-left: 4px; cursor: help; }
+        .pw-badge.pw-passed { color: var(--success); }
+        .pw-badge.pw-failed { color: var(--danger); }
+        .pw-badge.pw-skipped { color: var(--gray-400); }
+        
+        .progress-bar { height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; margin: 8px 0; }
+        .progress-fill { height: 100%; background: var(--success); transition: width 0.3s; }
+        .progress-legend { display: flex; gap: 12px; font-size: 0.7rem; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .legend-dot.pass { background: var(--success); }
+        .legend-dot.fail { background: var(--danger); }
+        .legend-dot.skip { background: var(--gray-300); }
+        .legend-dot.pending { background: var(--gray-200); border: 1px solid var(--gray-300); }
+        
+        .section-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
+        .section-tab { flex-shrink: 0; padding: 6px 12px; background: white; border: 1px solid var(--gray-200); border-radius: 16px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+        .section-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .section-tab .count { background: rgba(0,0,0,0.1); padding: 1px 5px; border-radius: 8px; font-size: 0.65rem; margin-left: 4px; }
+        .section-tab.active .count { background: rgba(255,255,255,0.2); }
+        
+        .test-card { background: white; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+        .test-card.status-pass { border-left: 3px solid var(--success); }
+        .test-card.status-fail { border-left: 3px solid var(--danger); }
+        .test-card.status-skip { border-left: 3px solid var(--gray-300); }
+        .test-header { display: flex; align-items: center; padding: 12px; cursor: pointer; gap: 10px; }
+        .test-id { background: var(--gray-100); color: var(--gray-500); font-size: 0.7rem; font-weight: 600; padding: 3px 6px; border-radius: 4px; }
+        .test-title { flex: 1; font-size: 0.85rem; font-weight: 500; }
+        .test-status { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+        .test-status.pending { background: var(--gray-200); }
+        .test-status.pass { background: var(--success); color: white; }
+        .test-status.fail { background: var(--danger); color: white; }
+        .test-status.skip { background: var(--gray-300); color: white; }
+        .test-chevron { color: var(--gray-400); transition: transform 0.2s; }
+        .test-card.expanded .test-chevron { transform: rotate(180deg); }
+        .test-body { display: none; padding: 0 12px 12px; border-top: 1px solid var(--gray-100); }
+        .test-card.expanded .test-body { display: block; }
+        
+        .launch-row { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+        .launch-btn { flex: 1; min-width: 140px; padding: 10px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .launch-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(59,130,246,0.3); }
+        .launch-btn.debug { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .launch-note { font-size: 0.7rem; color: var(--gray-500); text-align: center; margin-top: -4px; }
+        
+        .test-data { background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.7rem; white-space: pre-wrap; margin: 8px 0; cursor: pointer; }
+        .test-data:hover { background: #2d2d2d; }
+        
+        .info-box { background: var(--gray-50); padding: 10px; border-radius: 6px; margin: 8px 0; font-size: 0.8rem; }
+        .info-box h4 { font-size: 0.7rem; text-transform: uppercase; color: var(--gray-500); margin-bottom: 4px; }
+        
+        .action-buttons { display: flex; gap: 6px; margin: 12px 0; }
+        .action-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .action-btn.pass { background: #dcfce7; color: #166534; }
+        .action-btn.pass.selected { background: var(--success); color: white; }
+        .action-btn.fail { background: #fee2e2; color: #991b1b; }
+        .action-btn.fail.selected { background: var(--danger); color: white; }
+        .action-btn.skip { background: var(--gray-100); color: var(--gray-600); }
+        .action-btn.skip.selected { background: var(--gray-400); color: white; }
+        
+        .platform-section { margin: 12px 0; padding-top: 12px; border-top: 1px solid var(--gray-100); }
+        .platform-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+        .platform-btn { padding: 6px 10px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; }
+        .platform-btn:hover { background: var(--gray-200); }
+        .platform-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .platform-badge { background: var(--gray-100); color: var(--gray-600); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; }
+        
+        /* Report styles */
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+        .summary-card { padding: 16px; border-radius: 10px; text-align: center; }
+        .summary-card.total { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); }
+        .summary-card.pass { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+        .summary-card.fail { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+        .summary-card.skip { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); }
+        .summary-card.pending { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .summary-value { font-size: 2rem; font-weight: 700; }
+        .summary-card.total .summary-value { color: var(--primary-dark); }
+        .summary-card.pass .summary-value { color: #166534; }
+        .summary-card.fail .summary-value { color: #991b1b; }
+        .summary-card.skip .summary-value { color: #374151; }
+        .summary-card.pending .summary-value { color: #92400e; }
+        .summary-label { font-size: 0.75rem; text-transform: uppercase; color: var(--gray-600); margin-top: 4px; }
+        
+        .platform-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 8px; margin-bottom: 8px; }
+        .platform-row .platform-icon { font-size: 1.2rem; width: 40px; text-align: center; }
+        .platform-row .platform-name { flex: 0 0 120px; font-weight: 500; font-size: 0.85rem; }
+        .platform-row .platform-bar { flex: 1; height: 24px; background: var(--gray-200); border-radius: 12px; overflow: hidden; position: relative; }
+        .platform-row .platform-fill { height: 100%; border-radius: 12px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 0.7rem; font-weight: 600; color: white; min-width: fit-content; }
+        .platform-row .platform-fill.pass { background: var(--success); }
+        .platform-row .platform-fill.fail { background: var(--danger); }
+        .platform-row .platform-fill.mixed { background: linear-gradient(90deg, var(--success) var(--pass-pct), var(--danger) var(--pass-pct)); }
+        .platform-row .platform-stats { flex: 0 0 100px; text-align: right; font-size: 0.8rem; color: var(--gray-600); }
+        
+        .section-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid var(--gray-100); }
+        .section-row:last-child { border-bottom: none; }
+        .section-row .section-icon { font-size: 1.1rem; }
+        .section-row .section-name { flex: 0 0 100px; font-weight: 500; font-size: 0.85rem; }
+        .section-row .section-bar { flex: 1; height: 20px; background: var(--gray-100); border-radius: 10px; overflow: hidden; display: flex; }
+        .section-row .bar-segment { height: 100%; }
+        .section-row .bar-segment.pass { background: var(--success); }
+        .section-row .bar-segment.fail { background: var(--danger); }
+        .section-row .bar-segment.skip { background: var(--gray-400); }
+        .section-row .section-stats { flex: 0 0 80px; text-align: right; font-size: 0.75rem; color: var(--gray-500); }
+        
+        .attention-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--gray-50); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--danger); }
+        .attention-item.warning { border-left-color: var(--warning); }
+        .attention-item .attention-id { font-weight: 600; font-size: 0.8rem; color: var(--gray-500); }
+        .attention-item .attention-title { flex: 1; font-size: 0.85rem; }
+        .attention-item .attention-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
+        .attention-item .attention-badge.fail { background: #fee2e2; color: #991b1b; }
+        .attention-item .attention-badge.no-platform { background: #fef3c7; color: #92400e; }
+        
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .matrix-table th, .matrix-table td { padding: 8px; text-align: center; border: 1px solid var(--gray-200); }
+        .matrix-table th { background: var(--gray-100); font-weight: 600; }
+        .matrix-table .section-header-cell { text-align: left; font-weight: 500; }
+        .matrix-cell { width: 40px; height: 40px; }
+        .matrix-cell.full { background: var(--success); color: white; }
+        .matrix-cell.partial { background: #fef3c7; color: #92400e; }
+        .matrix-cell.none { background: var(--gray-50); color: var(--gray-400); }
+        .matrix-cell.has-fail { background: #fee2e2; color: #991b1b; }
+        
+        .notes-input { width: 100%; padding: 8px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem; min-height: 60px; resize: vertical; font-family: inherit; margin-top: 8px; }
+        
+        .screenshot-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .upload-btn { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: var(--gray-100); border: 1px dashed var(--gray-300); border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+        .upload-btn input { display: none; }
+        .screenshot-thumb { width: 60px; height: 60px; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid var(--gray-200); }
+        .screenshot-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .screenshot-thumb .remove { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 10px; }
+        
+        .console-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
+        .console-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; }
+        .console-toggle input { width: 16px; height: 16px; }
+        .console-output { background: #1e1e1e; color: #d4d4d4; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 0.65rem; max-height: 120px; overflow-y: auto; margin-top: 6px; }
+        .console-output .error { color: #f87171; }
+        .console-output .warn { color: #fbbf24; }
+        
+        /* Debug Config Panel */
+        .debug-config { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .debug-option { display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--gray-50); border-radius: 6px; cursor: pointer; }
+        .debug-option input { width: 18px; height: 18px; }
+        .debug-option-info { flex: 1; }
+        .debug-option-info strong { font-size: 0.8rem; display: block; }
+        .debug-option-info span { font-size: 0.7rem; color: var(--gray-500); }
+        
+        /* Automation Panel */
+        .automation-controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .automation-status { padding: 12px; background: var(--gray-50); border-radius: 6px; margin-bottom: 12px; }
+        .automation-status .status-text { font-size: 0.85rem; font-weight: 500; }
+        .automation-status .status-detail { font-size: 0.75rem; color: var(--gray-500); }
+        .automation-log { background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.7rem; max-height: 200px; overflow-y: auto; }
+        .automation-log .success { color: #4ade80; }
+        .automation-log .error { color: #f87171; }
+        .automation-log .warn { color: #fbbf24; }
+        .automation-log .info { color: #60a5fa; }
+        
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+        .metric-card { background: var(--gray-50); padding: 12px; border-radius: 6px; text-align: center; }
+        .metric-card .value { font-size: 1.5rem; font-weight: 600; color: var(--primary); }
+        .metric-card .label { font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase; }
+        
+        .export-section { margin-top: 16px; }
+        .export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .debug-fab { position: fixed; bottom: 16px; right: 16px; width: 48px; height: 48px; background: var(--gray-700); color: white; border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.3); z-index: 999; display: none; }
+        .debug-fab.visible { display: flex; align-items: center; justify-content: center; }
+        
+        .debug-panel { position: fixed; bottom: 0; left: 0; right: 0; background: #1e1e1e; color: #d4d4d4; max-height: 35vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; z-index: 1000; }
+        .debug-panel.visible { transform: translateY(0); }
+        .debug-panel-header { display: flex; justify-content: space-between; padding: 8px 12px; background: #2d2d2d; position: sticky; top: 0; }
+        .debug-panel-header h4 { font-size: 0.75rem; color: #9ca3af; }
+        .debug-panel-content { padding: 10px; font-family: monospace; font-size: 0.65rem; }
+        .debug-entry { padding: 3px 0; border-bottom: 1px solid #333; }
+        
+        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--gray-900); color: white; padding: 10px 20px; border-radius: 6px; font-size: 0.8rem; opacity: 0; transition: all 0.3s; z-index: 1001; }
+        .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        .hidden { display: none !important; }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; }
+            .header-tabs { display: none; }
+        }
+        
+        /* Dark Mode Toggle */
+        .theme-toggle { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; }
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Variant Testing Styles */
+        .variant-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; margin-left: 8px; }
+        .variants-section { margin-top: 16px; border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; }
+        .variants-header { background: var(--gray-50); padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 500; font-size: 0.85rem; }
+        .variants-header:hover { background: var(--gray-100); }
+        .variants-chevron { transition: transform 0.2s; }
+        .variants-body { display: none; padding: 10px; }
+        .variants-body.expanded { display: block; }
+        .variant-row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; margin-bottom: 6px; background: var(--gray-50); }
+        .variant-row.status-pass { background: rgba(34, 197, 94, 0.1); border-left: 3px solid var(--success); }
+        .variant-row.status-fail { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+        .variant-row.status-skip { background: rgba(156, 163, 175, 0.1); border-left: 3px solid var(--gray-300); }
+        .variant-info { display: flex; align-items: center; gap: 6px; min-width: 200px; }
+        .variant-type { font-size: 0.9rem; }
+        .variant-name { font-size: 0.8rem; font-weight: 500; }
+        .variant-expected { font-size: 0.75rem; color: var(--gray-500); }
+        .variant-data { font-family: monospace; font-size: 0.7rem; background: var(--gray-100); padding: 4px 8px; border-radius: 4px; cursor: pointer; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .variant-actions { display: flex; gap: 4px; }
+        .variant-btn { width: 28px; height: 28px; border: 1px solid var(--gray-200); border-radius: 4px; cursor: pointer; font-size: 0.75rem; background: white; }
+        .variant-btn:hover { background: var(--gray-100); }
+        .variant-btn.pass.selected { background: var(--success); color: white; border-color: var(--success); }
+        .variant-btn.fail.selected { background: var(--danger); color: white; border-color: var(--danger); }
+        .variant-btn.skip.selected { background: var(--gray-400); color: white; border-color: var(--gray-400); }
+        .variant-actions-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); }
+        
+        /* Dark Mode Variant Overrides */
+        [data-theme="dark"] .variants-section { border-color: var(--border-color); }
+        [data-theme="dark"] .variants-header { background: var(--bg-tertiary); }
+        [data-theme="dark"] .variants-header:hover { background: var(--bg-secondary); }
+        [data-theme="dark"] .variant-row { background: var(--bg-tertiary); }
+        [data-theme="dark"] .variant-row.status-pass { background: rgba(34, 197, 94, 0.15); }
+        [data-theme="dark"] .variant-row.status-fail { background: rgba(239, 68, 68, 0.15); }
+        [data-theme="dark"] .variant-expected { color: var(--text-secondary); }
+        [data-theme="dark"] .variant-data { background: var(--bg-secondary); color: var(--text-primary); }
+        [data-theme="dark"] .variant-btn { background: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary); }
+        [data-theme="dark"] .variant-btn:hover { background: var(--bg-tertiary); }
+        [data-theme="dark"] .variant-actions-row { border-color: var(--border-color); }
+        
+        /* Dark Mode Overrides */
+        [data-theme="dark"] body { background: var(--bg-primary); color: var(--text-primary); }
+        [data-theme="dark"] .panel { background: var(--bg-secondary); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        [data-theme="dark"] .login-screen p { color: var(--text-secondary); }
+        [data-theme="dark"] .google-btn { background: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary); }
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select,
+        [data-theme="dark"] .form-group textarea,
+        [data-theme="dark"] .notes-input { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary); }
+        [data-theme="dark"] .tab { color: var(--text-secondary); }
+        [data-theme="dark"] .tab.active { background: var(--bg-tertiary); color: var(--text-primary); }
+        [data-theme="dark"] .tabs { border-color: var(--border-color); }
+        [data-theme="dark"] .test-grid { background: var(--bg-tertiary); }
+        [data-theme="dark"] .test-grid .section-header { color: var(--text-primary); border-color: var(--border-color); }
+        [data-theme="dark"] .select-all-btn { background: var(--bg-secondary); color: var(--text-primary); }
+        [data-theme="dark"] .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+        [data-theme="dark"] .assignment-card { background: var(--bg-tertiary); }
+        [data-theme="dark"] .assignment-card p { color: var(--text-secondary); }
+        [data-theme="dark"] .progress-bar { background: var(--bg-tertiary); }
+        [data-theme="dark"] .test-card { background: var(--bg-secondary); }
+        [data-theme="dark"] .test-card-header { background: var(--bg-tertiary); }
+        [data-theme="dark"] .test-meta span { color: var(--text-secondary); }
+        [data-theme="dark"] .test-detail p { color: var(--text-secondary); }
+        [data-theme="dark"] .test-detail pre { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary); }
+        [data-theme="dark"] .status-btn { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-color); }
+        [data-theme="dark"] .debug-option { background: var(--bg-tertiary); }
+        [data-theme="dark"] .debug-option-info span { color: var(--text-secondary); }
+        [data-theme="dark"] .automation-status { background: var(--bg-tertiary); }
+        [data-theme="dark"] .automation-status .status-detail { color: var(--text-secondary); }
+        [data-theme="dark"] .metric-card { background: var(--bg-tertiary); }
+        [data-theme="dark"] .metric-card .label { color: var(--text-secondary); }
+        [data-theme="dark"] .upload-btn { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary); }
+        [data-theme="dark"] .screenshot-thumb { border-color: var(--border-color); }
+        [data-theme="dark"] .console-section { border-color: var(--border-color); }
+        [data-theme="dark"] .matrix-cell.none { background: var(--bg-tertiary); }
+        [data-theme="dark"] .toast { background: var(--bg-secondary); }
+        [data-theme="dark"] .search-input { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary); }
+        [data-theme="dark"] .filter-btn { background: var(--bg-tertiary); color: var(--text-primary); }
+        [data-theme="dark"] .filter-btn.active { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🧪 Game Shelf Test Plan</h1>
+            <div class="header-tabs" id="header-tabs"></div>
+            <div class="user-info" id="user-info"></div>
+        </div>
+    </header>
+    
+    <div id="login-screen" class="login-screen">
+        <h2>🎮 Game Shelf Tester Portal</h2>
+        <p>Sign in to access your assigned tests</p>
+        <button class="google-btn" onclick="signIn()">
+            <img src="https://www.google.com/favicon.ico" alt="">Sign in with Google
+        </button>
+        <button class="theme-toggle" onclick="toggleDarkMode()" style="margin-top: 20px; background: var(--gray-200); color: var(--gray-700);">
+            <span id="login-theme-icon">🌙</span> Toggle Dark Mode
+        </button>
+        <script>
+            // Update login screen theme icon (dark mode is default)
+            document.getElementById('login-theme-icon').textContent = 
+                document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        </script>
+    </div>
+    
+    <main id="main-content" class="container hidden">
+        <!-- TESTING TAB -->
+        <div id="tab-testing">
+            <div id="assignment-banner" class="panel hidden" style="background: linear-gradient(135deg, #dbeafe, #e0e7ff); border: 1px solid #93c5fd;">
+                <h3 style="color: var(--primary-dark);">📋 Your Assignment</h3>
+                <p id="assignment-desc" style="font-size: 0.85rem;"></p>
+            </div>
+            
+            <div class="panel" id="progress-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Progress</h3>
+                    <span id="progress-text" style="font-size: 0.8rem; color: var(--gray-500);">0/0</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-legend">
+                    <span class="legend-item"><span class="legend-dot pass"></span> Pass <span id="cnt-pass">0</span></span>
+                    <span class="legend-item"><span class="legend-dot fail"></span> Fail <span id="cnt-fail">0</span></span>
+                    <span class="legend-item"><span class="legend-dot skip"></span> Skip <span id="cnt-skip">0</span></span>
+                    <span class="legend-item"><span class="legend-dot pending"></span> Pending <span id="cnt-pending">0</span></span>
+                </div>
+            </div>
+            
+            <div class="panel" id="platform-panel" style="padding: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Testing on:</span>
+                    <span id="current-platform" style="font-size: 0.85rem; font-weight: 500;"></span>
+                </div>
+                <select id="platform-select" onchange="changeGlobalPlatform(this.value)" style="padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem;">
+                    <option value="desktop-chrome">🖥️ Chrome</option>
+                    <option value="desktop-safari">🖥️ Safari</option>
+                    <option value="desktop-firefox">🖥️ Firefox</option>
+                    <option value="iphone-safari">📱 iPhone Safari</option>
+                    <option value="iphone-pwa">📱 iPhone PWA</option>
+                    <option value="android-chrome">🤖 Android Chrome</option>
+                    <option value="android-pwa">🤖 Android PWA</option>
+                    <option value="ipad">📲 iPad</option>
+                </select>
+            </div>
+            
+            <div class="section-tabs" id="section-tabs"></div>
+            <div id="test-cards"></div>
+            
+            <div id="no-tests" class="panel hidden" style="text-align: center; padding: 40px;">
+                <h3>🎯 No Tests Assigned</h3>
+                <p style="color: var(--gray-500);">An admin will assign tests to you.</p>
+            </div>
+            
+            <div class="export-section">
+                <div class="export-buttons">
+                    <button class="btn btn-primary" onclick="exportJSON()">📋 Copy JSON for Claude</button>
+                    <button class="btn btn-secondary" onclick="exportCSV()">📊 Download CSV</button>
+                    <button class="btn btn-secondary" onclick="exportMarkdown()">📝 Markdown Report</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ADMIN TAB -->
+        <div id="tab-admin" class="hidden">
+            <div class="panel admin">
+                <h3>👑 Admin Panel</h3>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchAdminTab('assign')">Assign Tests</button>
+                    <button class="tab" onclick="switchAdminTab('view')">Assignments</button>
+                    <button class="tab" onclick="switchAdminTab('results')">All Results</button>
+                </div>
+                
+                <div id="admin-assign">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tester Email</label>
+                            <input type="email" id="assign-email" placeholder="tester@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Focus Area</label>
+                            <input type="text" id="assign-focus" placeholder="e.g., Onboarding Expert">
+                        </div>
+                    </div>
+                    <div class="form-group full">
+                        <label>Select Tests</label>
+                        <div class="test-grid" id="test-grid"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="createAssignment()">✅ Create Assignment</button>
+                </div>
+                
+                <div id="admin-view" class="assignment-list hidden"></div>
+                <div id="admin-results" class="hidden"></div>
+            </div>
+        </div>
+        
+        <!-- DEBUG TAB -->
+        <div id="tab-debug" class="hidden">
+            <div class="panel debug">
+                <h3>🔧 Debug Configuration</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Configure debug options before launching Game Shelf. These settings enable additional logging and metrics collection.</p>
+                
+                <div class="debug-config">
+                    <label class="debug-option">
+                        <input type="checkbox" id="debug-console" checked>
+                        <div class="debug-option-info">
+                            <strong>Console Capture</strong>
+                            <span>Log all console output</span>
+                        </div>
+                    </label>
+                    <label class="debug-option">
+                        <input type="checkbox" id="debug-network">
+                        <div class="debug-option-info">
+                            <strong>Network Logging</strong>
+                            <span>Track API requests</span>
+                        </div>
+                    </label>
+                    <label class="debug-option">
+                        <input type="checkbox" id="debug-performance">
+                        <div class="debug-option-info">
+                            <strong>Performance Metrics</strong>
+                            <span>FPS, load times, memory</span>
+                        </div>
+                    </label>
+                    <label class="debug-option">
+                        <input type="checkbox" id="debug-storage">
+                        <div class="debug-option-info">
+                            <strong>Storage Monitor</strong>
+                            <span>Track localStorage changes</span>
+                        </div>
+                    </label>
+                    <label class="debug-option">
+                        <input type="checkbox" id="debug-events">
+                        <div class="debug-option-info">
+                            <strong>Event Tracking</strong>
+                            <span>User interactions</span>
+                        </div>
+                    </label>
+                    <label class="debug-option">
+                        <input type="checkbox" id="debug-errors" checked>
+                        <div class="debug-option-info">
+                            <strong>Error Capture</strong>
+                            <span>Unhandled exceptions</span>
+                        </div>
+                    </label>
+                </div>
+                
+                <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="launchWithDebug()">🚀 Launch Game Shelf with Debug</button>
+                    <button class="btn btn-secondary" onclick="copyDebugBookmarklet()">📎 Copy Debug Bookmarklet</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>📊 Collected Metrics</h3>
+                <div class="metrics-grid" id="metrics-grid">
+                    <div class="metric-card"><div class="value" id="metric-errors">0</div><div class="label">Errors</div></div>
+                    <div class="metric-card"><div class="value" id="metric-warnings">0</div><div class="label">Warnings</div></div>
+                    <div class="metric-card"><div class="value" id="metric-logs">0</div><div class="label">Log Entries</div></div>
+                    <div class="metric-card"><div class="value" id="metric-duration">0s</div><div class="label">Session</div></div>
+                </div>
+                <button class="btn btn-secondary btn-sm" style="margin-top: 10px;" onclick="clearMetrics()">Clear Metrics</button>
+            </div>
+        </div>
+        
+        <!-- AUTOMATION TAB -->
+        <div id="tab-automation" class="hidden">
+            <div class="panel">
+                <h3>🤖 Automation Runner</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Run through tests automatically or step through manually.</p>
+                
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px; background: var(--gray-50); border-radius: 6px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="auto-advance" checked style="width: 18px; height: 18px;">
+                        <span style="font-size: 0.85rem; font-weight: 500;">Auto-advance</span>
+                    </label>
+                    <select id="auto-delay" style="padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem;">
+                        <option value="3">3 seconds</option>
+                        <option value="5" selected>5 seconds</option>
+                        <option value="10">10 seconds</option>
+                        <option value="15">15 seconds</option>
+                        <option value="30">30 seconds</option>
+                    </select>
+                    <span style="font-size: 0.75rem; color: var(--gray-500);">Time per test</span>
+                </div>
+                
+                <div class="automation-controls">
+                    <button class="btn btn-success" onclick="runAllTests()">▶️ Run All Tests</button>
+                    <button class="btn btn-primary" onclick="runSelectedTests()">▶️ Run Selected</button>
+                    <button class="btn btn-success" onclick="nextTest()">⏭️ Next Test</button>
+                    <button class="btn btn-secondary" onclick="skipTest()">⏩ Skip</button>
+                    <button class="btn btn-danger" onclick="stopTests()">⏹️ Stop</button>
+                    <button class="btn btn-secondary" onclick="resetAutomation()">🔄 Reset</button>
+                </div>
+                
+                <div class="automation-status" id="automation-status">
+                    <div class="status-text">⏸️ Ready to run</div>
+                    <div class="status-detail">Select tests and click Run</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Test Sequence</label>
+                    <div class="test-grid" id="automation-tests"></div>
+                </div>
+                
+                <div style="margin-top: 12px;">
+                    <label style="font-size: 0.75rem; font-weight: 500; color: var(--gray-500);">EXECUTION LOG</label>
+                    <div class="automation-log" id="automation-log">
+                        <div class="info">[Ready] Automation runner initialized</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>📋 Test Scripts</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Generate test scripts for external automation tools.</p>
+                <div class="export-buttons">
+                    <button class="btn btn-secondary" onclick="generatePlaywright()">🎭 Playwright Script</button>
+                    <button class="btn btn-secondary" onclick="generateCypress()">🌲 Cypress Script</button>
+                    <button class="btn btn-secondary" onclick="generatePuppeteer()">🎪 Puppeteer Script</button>
+                </div>
+            </div>
+            
+            <div class="panel" id="playwright-panel" style="border: 2px solid var(--primary); display: none;">
+                <h3>🤖 Playwright Results</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Run Playwright tests and push results to cloud for the GitHub version.</p>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+                    <input type="file" id="playwright-file" accept=".json" style="display: none;" onchange="importPlaywrightFile(event)">
+                    <button class="btn btn-primary" onclick="document.getElementById('playwright-file').click()">📥 Import JSON</button>
+                    <button class="btn btn-success" id="push-results-btn" onclick="pushResultsToCloud()" style="display: none;">☁️ Push to Cloud</button>
+                    <button class="btn btn-secondary" onclick="clearPlaywrightResults()">🗑️ Clear</button>
+                </div>
+                
+                <div id="cloud-status" style="display: none; padding: 8px 12px; background: var(--gray-100); border-radius: 6px; margin-bottom: 12px; font-size: 0.8rem;">
+                    <span id="cloud-status-text"></span>
+                </div>
+                
+                <div id="playwright-summary" style="display: none; padding: 12px; background: var(--gray-50); border-radius: 8px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong style="font-size: 0.9rem;">Last Import</strong>
+                        <span id="pw-timestamp" style="font-size: 0.75rem; color: var(--gray-500);"></span>
+                    </div>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <div style="text-align: center;">
+                            <div id="pw-total" style="font-size: 1.5rem; font-weight: bold;">0</div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500);">Total</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div id="pw-passed" style="font-size: 1.5rem; font-weight: bold; color: var(--success);">0</div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500);">Passed</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div id="pw-failed" style="font-size: 1.5rem; font-weight: bold; color: var(--danger);">0</div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500);">Failed</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div id="pw-skipped" style="font-size: 1.5rem; font-weight: bold; color: var(--gray-400);">0</div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500);">Skipped</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div id="pw-duration" style="font-size: 1.5rem; font-weight: bold;">0s</div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500);">Duration</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="playwright-failures" style="display: none;">
+                    <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--danger);">❌ Failed Tests</div>
+                    <div id="pw-failure-list" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+                
+                <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: 12px;">
+                    <strong>Workflow:</strong><br>
+                    1. Run: <code>npx playwright test --reporter=json > results.json</code><br>
+                    2. Click <strong>Import JSON</strong> to load results<br>
+                    3. Click <strong>Push to Cloud</strong> to sync with GitHub version
+                </div>
+            </div>
+        </div>
+        
+        <!-- REPORTS TAB -->
+        <div id="tab-reports" class="hidden">
+            <div class="panel">
+                <h3>📊 Test Coverage Dashboard</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 16px;">Visual overview of testing progress across platforms.</p>
+                
+                <div class="report-summary" id="report-summary">
+                    <div class="summary-cards">
+                        <div class="summary-card total"><div class="summary-value" id="rpt-total">0</div><div class="summary-label">Total Tests</div></div>
+                        <div class="summary-card pass"><div class="summary-value" id="rpt-pass">0</div><div class="summary-label">Passed</div></div>
+                        <div class="summary-card fail"><div class="summary-value" id="rpt-fail">0</div><div class="summary-label">Failed</div></div>
+                        <div class="summary-card skip"><div class="summary-value" id="rpt-skip">0</div><div class="summary-label">Skipped</div></div>
+                        <div class="summary-card pending"><div class="summary-value" id="rpt-pending">0</div><div class="summary-label">Remaining</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>📱 Platform Coverage</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Tests completed on each platform.</p>
+                <div id="platform-coverage"></div>
+            </div>
+            
+            <div class="panel">
+                <h3>📋 Section Progress</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Completion status by test section.</p>
+                <div id="section-progress"></div>
+            </div>
+            
+            <div class="panel">
+                <h3>🔴 Tests Needing Attention</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Failed tests and tests without platform assignment.</p>
+                <div id="attention-list"></div>
+            </div>
+            
+            <div class="panel">
+                <h3>📈 Platform × Section Matrix</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Coverage heatmap showing which sections have been tested on which platforms.</p>
+                <div id="coverage-matrix" style="overflow-x: auto;"></div>
+            </div>
+        </div>
+    </main>
+    
+    <button class="debug-fab" id="debug-fab" onclick="toggleDebugPanel()">🐛</button>
+    
+    <div class="debug-panel" id="debug-panel">
+        <div class="debug-panel-header">
+            <h4>Console Output (<span id="log-count">0</span>)</h4>
+            <div>
+                <button onclick="clearLogs()" style="background:none;border:none;color:#9ca3af;cursor:pointer;margin-right:8px;">Clear</button>
+                <button onclick="toggleDebugPanel()" style="background:none;border:none;color:#9ca3af;cursor:pointer;">Close</button>
+            </div>
+        </div>
+        <div class="debug-panel-content" id="debug-content"></div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+<script>
+// ========== CONFIG ==========
+const firebaseConfig = {
+    apiKey: "AIzaSyBQVwn8vOrFTzLlm2MYIPBwgZV2xR9AuhM",
+    authDomain: "word-boxing.firebaseapp.com",
+    databaseURL: "https://word-boxing-default-rtdb.firebaseio.com",
+    projectId: "word-boxing"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+const GAMESHELF_URL = 'https://stewartdavidp-ship-it.github.io/gameshelftest/';
+const ADMIN_EMAILS = ['stewartdavidp@gmail.com'];
+
+// ========== TEST DATA ==========
+const TEST_SECTIONS = [
+    // ========== ONBOARDING (A1-A8) ==========
+    { id: 'onboarding', name: 'Onboarding', icon: '👋', tests: [
+        { id: 'A1', title: 'Welcome screen shows for new user', expected: 'Welcome visible', steps: '1. Fresh load\n2. Check welcome', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'A2', title: 'Can proceed past welcome screen', expected: 'Next screen shows', steps: '1. Click Lets Go\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'A3', title: 'Can select games during onboarding', expected: 'Games selectable', steps: '1. Select 3 games\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'A4', title: 'Game selection screen has next button', expected: 'Button visible', steps: '1. Check Next button', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'A5', title: 'Can complete full onboarding flow', expected: 'Home screen', steps: '1. Complete all steps\n2. See home', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'A7', title: 'Can skip optional steps', expected: 'Skip works', steps: '1. Click skip\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'A8', title: 'Onboarding state persists on reload', expected: 'State kept', steps: '1. Reload\n2. Check state', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== TRACKING (T1-T8) ==========
+    { id: 'tracking', name: 'Tracking', icon: '📋', tests: [
+        { id: 'T1', title: 'Log sheet opens via hash', expected: 'Sheet opens', steps: '1. Go to #log\n2. Verify sheet', launch: '#log', note: 'Playwright' },
+        { id: 'T2', title: 'Can type in log input', expected: 'Text appears', steps: '1. Open log\n2. Type text', launch: '#log', note: 'Playwright' },
+        { id: 'T3', title: 'Wordle result detected', expected: 'Game detected', steps: '1. Paste Wordle\n2. Check detection', launch: '#log', note: 'Playwright' },
+        { id: 'T4', title: 'Connections result can be pasted', expected: 'Game detected', steps: '1. Paste Connections\n2. Check', launch: '#log', note: 'Playwright' },
+        { id: 'T5', title: 'Home tab shows game cards', expected: 'Cards visible', steps: '1. Go home\n2. Check cards', launch: '#home', note: 'Playwright' },
+        { id: 'T6', title: 'Games tab accessible', expected: 'Tab opens', steps: '1. Click Games\n2. Verify', launch: '#games', note: 'Playwright' },
+        { id: 'T7', title: 'Social tab accessible', expected: 'Tab opens', steps: '1. Click Social\n2. Verify', launch: '#social', note: 'Playwright' },
+        { id: 'T8', title: 'Share tab accessible', expected: 'Tab opens', steps: '1. Click Share\n2. Verify', launch: '#share', note: 'Playwright' }
+    ]},
+    
+    // ========== CLIPBOARD (C1-C18) ==========
+    { id: 'clipboard', name: 'Clipboard', icon: '📎', tests: [
+        { id: 'C1', title: 'Clipboard monitor starts after launch', expected: 'Monitor active', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'C2', title: 'Clipboard check function exists', expected: 'Function defined', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C3', title: 'Wordle result detected from clipboard', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C4', title: 'Connections result detected', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C5', title: 'Strands result detected', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C6', title: 'Mini Crossword time detected', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C7', title: 'Invalid text not detected', expected: 'No detection', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C8', title: 'Log sheet has input field', expected: 'Input visible', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C9', title: 'Pasting Wordle triggers detection', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C10', title: 'Multiple results handled', expected: 'Handled', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C11', title: 'Clipboard permission denied handled', expected: 'No crash', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C12', title: 'Works without clipboard API', expected: 'Fallback works', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C13', title: 'Visibility change triggers check', expected: 'Check runs', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C14', title: 'Detected result shows prompt', expected: 'Prompt shown', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'C15', title: 'Handles Wordle with comma', expected: 'Parsed correctly', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C16', title: 'Handles Wordle without comma', expected: 'Parsed correctly', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C17', title: 'Handles varied spacing', expected: 'Parsed correctly', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'C18', title: 'Case insensitive matching', expected: 'Matched', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== DATA INTEGRITY (D1-D23) ==========
+    { id: 'data', name: 'Data Integrity', icon: '💾', tests: [
+        { id: 'D1', title: 'Streak starts at 1 for first game', expected: 'Streak = 1', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D2', title: 'Streak increments for consecutive days', expected: 'Increments', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D3', title: 'Streak resets after 1 missed day', expected: 'Resets', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D4', title: 'Streak resets after multiple missed', expected: 'Resets', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D5', title: 'Max streak never decreases', expected: 'Never decreases', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D6', title: 'Max streak updates when exceeded', expected: 'Updates', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D7', title: 'Game at 11:59 PM counts for today', expected: 'Counts today', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D8', title: 'Game at 12:01 AM counts for new day', expected: 'New day', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D9', title: 'History preserves all results', expected: 'Preserved', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D10', title: 'History survives page reload', expected: 'Survives', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D11', title: 'History survives back/forward', expected: 'Survives', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D12', title: 'Multiple games per day stored', expected: 'All stored', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D13', title: 'Old format data is readable', expected: 'Readable', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D14', title: 'Missing fields dont crash app', expected: 'No crash', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D15', title: 'Corrupted JSON is handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D16', title: 'Empty localStorage starts fresh', expected: 'Fresh start', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D17', title: 'Tokens cannot go negative', expected: 'Never negative', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D18', title: 'Large token amounts stored', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D19', title: 'Win rate calculated correctly', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D20', title: 'Stats with zero games no divide by zero', expected: 'No error', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D21', title: 'Referral code persists', expected: 'Persists', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D22', title: 'Referral counts increment', expected: 'Increments', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'D23', title: 'Data structure is JSON serializable', expected: 'Serializable', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== GAME LAUNCH (G1-G11) ==========
+    { id: 'games', name: 'Game Launch', icon: '🎮', tests: [
+        { id: 'G1', title: 'Game cards render on home tab', expected: 'Cards render', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'G2', title: 'Game card shows name and icon', expected: 'Name/icon shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'G3', title: 'Logged game shows checkmark', expected: 'Checkmark shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'G4', title: 'Clicking game card triggers launch', expected: 'Launches', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'G5', title: 'Clicking logged game shows toast', expected: 'Toast shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'G6', title: 'Game launch URL is correct', expected: 'URL correct', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'G7', title: 'App tracks last launched game', expected: 'Tracked', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'G8', title: 'Visibility change triggers check', expected: 'Check runs', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'G9', title: 'Desktop uses browser launch', expected: 'Browser launch', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'G10', title: 'Games tab shows all games', expected: 'All shown', steps: 'Automated', launch: '#games', note: 'Playwright' },
+        { id: 'G11', title: 'Can add new game from browse', expected: 'Can add', steps: 'Automated', launch: '#games', note: 'Playwright' }
+    ]},
+    
+    // ========== DEEP LINKS (H1-H6) ==========
+    { id: 'deeplinks', name: 'Deep Links', icon: '🔗', tests: [
+        { id: 'H1', title: '#log opens log sheet', expected: 'Sheet opens', steps: '1. Go to #log\n2. Verify', launch: '#log', note: 'Playwright' },
+        { id: 'H2', title: '#home switches to home tab', expected: 'Tab switches', steps: '1. Go to #home\n2. Verify', launch: '#home', note: 'Playwright' },
+        { id: 'H3', title: '?fresh=1 clears state', expected: 'State cleared', steps: '1. Add ?fresh=1\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'H4', title: 'seedData parameter works', expected: 'Data seeded', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'H5', title: 'Unknown hash handled gracefully', expected: 'No crash', steps: '1. Go to #invalid\n2. Verify', launch: '#invalid', note: 'Playwright' },
+        { id: 'H6', title: 'Deep links redirect to onboarding', expected: 'Redirects', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== USER JOURNEYS (J1-J16) ==========
+    { id: 'journeys', name: 'User Journeys', icon: '🚶', tests: [
+        { id: 'J1', title: 'Fresh user sees onboarding', expected: 'Onboarding shown', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'J2', title: 'User can complete onboarding', expected: 'Completed', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'J3', title: 'User launches game and returns', expected: 'Returns to log', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J4', title: 'User pastes Wordle result', expected: 'Logged', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'J5', title: 'Logged game shows checkmark', expected: 'Checkmark shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'J6', title: 'Cannot log same game twice', expected: 'Blocked', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J7', title: 'New streak starts at 1', expected: 'Streak = 1', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J8', title: 'Streak increments consecutive days', expected: 'Increments', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J9', title: 'Streak resets after missing day', expected: 'Resets', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J10', title: 'Max streak preserved on reset', expected: 'Preserved', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J11', title: 'User can log multiple games', expected: 'All logged', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J12', title: 'All games complete shows celebration', expected: 'Celebration', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J13', title: 'User earns tokens for logging', expected: 'Tokens earned', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J14', title: 'Token balance displays correctly', expected: 'Correct balance', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'J15', title: 'User can navigate to share tab', expected: 'Navigates', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'J16', title: 'Share includes todays results', expected: 'Results shown', steps: 'Automated', launch: '#share', note: 'Playwright' }
+    ]},
+    
+    // ========== PLATFORM (P1-P14) ==========
+    { id: 'platform', name: 'Platform/PWA', icon: '📱', tests: [
+        { id: 'P1', title: 'Service worker is registered', expected: 'Registered', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P2', title: 'Manifest is present', expected: 'Present', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P3', title: 'App has proper PWA meta tags', expected: 'Tags present', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P4', title: 'App detects browser mode', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P5', title: 'App can detect iOS Safari', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P10', title: 'Bottom sheet can be swiped', expected: 'Swipeable', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P11', title: 'App handles offline gracefully', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P12', title: 'Local data persists offline', expected: 'Persists', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P13', title: 'Core functionality works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'P14', title: 'LocalStorage works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== REGRESSION (R1-R21) ==========
+    { id: 'regression', name: 'Regression', icon: '🔄', tests: [
+        { id: 'R1', title: 'Connections emoji line length 8', expected: 'Length correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R2', title: 'Connections parser uses {8}', expected: 'Correct regex', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R3', title: 'Perfect Connections detected', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R4', title: 'Connections with mistakes detected', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R5', title: 'App uses gameShelfData key', expected: 'Correct key', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R6', title: 'App reads from gameShelfData', expected: 'Reads correctly', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R7', title: 'Referral code in sessionStorage', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R8', title: 'Install banner can be dismissed', expected: 'Dismissible', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R9', title: 'Elements clickable after dismiss', expected: 'Clickable', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R10', title: 'Games grid has unique ID', expected: 'Unique ID', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R11', title: 'Log input has unique ID', expected: 'Unique ID', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R12', title: 'NaN prevention in stats', expected: 'No NaN', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R13', title: 'Infinity prevention in calcs', expected: 'No Infinity', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R14', title: 'Undefined prevention in text', expected: 'No undefined', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R15', title: 'Date formatting edge cases', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R16', title: 'Large numbers display correctly', expected: 'Displayed', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R17', title: 'Empty string inputs handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R18', title: 'Special characters in input', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R19', title: 'Page loads under 5 seconds', expected: 'Fast load', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R20', title: 'Tab switching is instant', expected: 'Instant', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'R21', title: 'LocalStorage operations fast', expected: 'Fast', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== SOCIAL/REFERRAL (S1-S7, REF1-REF2) ==========
+    { id: 'social', name: 'Social/Referral', icon: '👥', tests: [
+        { id: 'S1', title: 'Referral code is generated', expected: 'Generated', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'S2', title: 'Referral link format correct', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'S3', title: 'Referral link can be copied', expected: 'Copyable', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'S4', title: 'Profile link format correct', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'S5', title: 'Friend code input accepts valid', expected: 'Accepts', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'S6', title: 'Referral URL parameter detected', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'S7', title: 'Profile URL opens profile view', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'REF1', title: 'Referral sheet opens', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'REF2', title: 'Referral stats display', expected: 'Displayed', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== EXTERNAL SHARE (X1-X5) ==========
+    { id: 'external', name: 'External Share', icon: '🔗', tests: [
+        { id: 'X1', title: 'Twitter share URL format correct', expected: 'Correct URL', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'X2', title: 'Share text is URL-encoded', expected: 'Encoded', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'X3', title: 'Share includes app link', expected: 'Link included', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'X4', title: 'SMS share opens messaging', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'X5', title: 'Email share has correct format', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== URL HANDLING (URL1-URL20) ==========
+    { id: 'urls', name: 'URL Handling', icon: '🌐', tests: [
+        { id: 'URL1', title: 'Referral code is 8 characters', expected: '8 chars', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL2', title: 'Referral code uses valid chars', expected: 'Valid chars', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL3', title: 'getReferralLink returns correct', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL4', title: 'Profile link uses #profile=', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL5', title: '#ref= parameter extracted', expected: 'Extracted', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL6', title: 'Referral stored in sessionStorage', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL7', title: '#profile= opens profile', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL8', title: '#battle= is extracted', expected: 'Extracted', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL9', title: 'Invalid code length (7) rejected', expected: 'Rejected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL10', title: 'Invalid code length (9) rejected', expected: 'Rejected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL11', title: 'Self-referral is blocked', expected: 'Blocked', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL12', title: 'Multiple hash params handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL13', title: 'Case handling lowercase to upper', expected: 'Converted', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL14', title: 'URL cleaned after processing', expected: 'Cleaned', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL15', title: 'Empty ref param handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL16', title: 'Special characters handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL17', title: 'Copy referral link works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL18', title: 'Share referral shows correct URL', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL19', title: 'Battle join URL triggers lookup', expected: 'Triggers', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'URL20', title: 'Battle code is 6 characters', expected: '6 chars', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== SMOKE (SM1-SM9) ==========
+    { id: 'smoke', name: 'Smoke Tests', icon: '💨', tests: [
+        { id: 'SM1', title: 'Welcome screen shows for new user', expected: 'Shows', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'SM2', title: 'Complete onboarding flow', expected: 'Completes', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
+        { id: 'SM3', title: 'Home tab displays correctly', expected: 'Displays', steps: 'Automated', launch: '#home', note: 'Playwright' },
+        { id: 'SM4', title: 'Log sheet opens', expected: 'Opens', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'SM5', title: 'Tab navigation works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'SM6', title: 'Invalid hash handled gracefully', expected: 'Handled', steps: 'Automated', launch: '#invalid', note: 'Playwright' },
+        { id: 'SM8', title: 'App loads on mobile viewport', expected: 'Loads', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'SM9', title: 'Menu opens via hash', expected: 'Opens', steps: 'Automated', launch: '#menu', note: 'Playwright' }
+    ]},
+    
+    // ========== BATTLES (B1-B60) ==========
+    { id: 'battles', name: 'Battles', icon: '⚔️', tests: [
+        { id: 'B1', title: 'Battle requires at least one game', expected: 'Validation', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B2', title: 'Battle generates unique join code', expected: 'Generated', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B3', title: 'Entry fee validation', expected: 'Validated', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B4', title: 'Battle duration options valid', expected: 'Valid', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B5', title: 'Wordle scores calculated correctly', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B6', title: 'Connections perfect bonus applied', expected: 'Applied', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B7', title: 'Scores accumulate across days', expected: 'Accumulated', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B8', title: 'Score not counted if not in battle', expected: 'Not counted', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B9', title: 'Win increments only for won games', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B10', title: 'Failed Wordle not counted as win', expected: 'Not counted', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B11', title: 'Wordle 1/6 is perfect', expected: 'Perfect', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B12', title: 'Connections no mistakes is perfect', expected: 'Perfect', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B13', title: 'Strands no hints is perfect', expected: 'Perfect', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B14', title: 'Join code must be valid format', expected: 'Validated', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B15', title: 'Cannot join own battle twice', expected: 'Blocked', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B16', title: 'Entry fee deducted on join', expected: 'Deducted', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B17', title: 'Prize pool increases with joins', expected: 'Increases', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B18', title: 'Cannot join expired battle', expected: 'Blocked', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B19', title: 'Highest score wins total-score', expected: 'Winner', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B20', title: 'Most wins wins win-count mode', expected: 'Winner', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B21', title: 'Tiebreaker - most days played', expected: 'Broken', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B22', title: 'Tiebreaker - most perfects', expected: 'Broken', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B23', title: 'Complete tie handled gracefully', expected: 'Handled', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B24', title: 'Single participant battle', expected: 'Works', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B25', title: 'Zero score participant', expected: 'Handled', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B26', title: 'Battle with all zero scores', expected: 'Handled', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B27', title: 'Battle ending at midnight', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B28', title: 'Very long battle (30 days)', expected: 'Works', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B29', title: 'Large participant count', expected: 'Scales', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B30', title: 'Active to Ended when expires', expected: 'Transitions', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B31', title: 'Pending to Active at start', expected: 'Transitions', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B32', title: 'Cannot modify ended battle', expected: 'Blocked', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B33', title: 'Winner gets 80% of prize', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B34', title: 'Free battle has no prize', expected: 'Zero', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B35', title: 'Prize increases with participants', expected: 'Increases', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B36', title: 'Runner-up prize with 3+ players', expected: 'Given', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B37', title: 'Battle impact shows when logging', expected: 'Shows', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'B38', title: 'Battle impact shows position', expected: 'Shows', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'B39', title: 'Battle impact shows gap to leader', expected: 'Shows', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'B40', title: 'Battle impact hidden when none', expected: 'Hidden', steps: 'Automated', launch: '#log', note: 'Playwright' },
+        { id: 'B41', title: 'Results modal exists', expected: 'Exists', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B42', title: 'Winner sees VICTORY title', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B43', title: 'Non-winner sees message', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B44', title: 'Prize display for winners', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B45', title: 'Standings list renders', expected: 'Renders', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B46', title: 'Tips section for non-winners', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B47', title: 'Share button present', expected: 'Present', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B48', title: 'Rematch button present', expected: 'Present', steps: 'Automated', launch: '#social', note: 'Playwright' },
+        { id: 'B49', title: 'shareBattleProgress exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B50', title: 'shareBattleResult exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B51', title: 'getOrdinalSuffix correct', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B52', title: 'Battle progress message format', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B53', title: 'Victory share message format', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B54', title: 'countPerfects returns string', expected: 'String', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B55', title: 'countGamesPlayed returns fraction', expected: 'Fraction', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B56', title: 'getDurationDays calculates', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B57', title: 'generateBattleTips returns array', expected: 'Array', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B58', title: 'updateBattleImpact exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B59', title: 'showBattleResultsModal exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'B60', title: 'closeBattleResults exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== BATTLE SCORING (BT1-BT13) ==========
+    { id: 'scoring', name: 'Battle Scoring', icon: '🎯', tests: [
+        { id: 'BT1', title: 'Wordle score parsing - standard', expected: 'Parsed', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT2', title: 'Wordle score parsing - failed', expected: 'X/6 detected', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT3', title: 'Connections parsing - perfect', expected: 'Perfect', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT4', title: 'Mini Crossword time parsing', expected: 'Parsed', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT5', title: 'Strands hints counting', expected: 'Counted', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT6', title: 'Total Score - points calc', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT7', title: 'Wins battle - only wins count', expected: 'Counted', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT8', title: 'Perfect Hunter - only perfects', expected: 'Counted', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT9', title: 'Streak Challenge - daily bonus', expected: 'Applied', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT10', title: 'Result includes required fields', expected: 'Present', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT11', title: 'Results stored in history', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT12', title: 'Battle rules are generated', expected: 'Generated', steps: 'Automated', launch: '', note: 'Playwright' },
+        { id: 'BT13', title: 'Battle types are available', expected: 'Available', steps: 'Automated', launch: '', note: 'Playwright' }
+    ]},
+    
+    // ========== SHARE HUB (SH1-SH43) ==========
+    { id: 'sharehub', name: 'Share Hub', icon: '📤', tests: [
+        { id: 'SH1', title: 'Default message includes referral', expected: 'Included', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH2', title: 'Referral checkbox toggles link', expected: 'Toggles', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH3', title: 'Minimal template excludes link', expected: 'Excluded', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH4', title: 'Referral link correct URL', expected: 'Correct', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH5', title: 'All templates include link', expected: 'Included', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH6', title: 'Share history section exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH7', title: 'Copy saves to history', expected: 'Saves', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH8', title: 'History displays after saving', expected: 'Displays', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH9', title: 'History can expand/collapse', expected: 'Toggles', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH10', title: 'History items show platform icon', expected: 'Shown', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH11', title: 'History items are clickable', expected: 'Clickable', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH12', title: 'History limits to 20', expected: 'Limited', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH13', title: 'History dropdown opens section', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH14', title: 'Twitter share correct URL', expected: 'Correct', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH15', title: 'All share buttons save history', expected: 'Saves', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH16', title: 'Default template shows results', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH17', title: 'Brag template celebratory', expected: 'Celebratory', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH18', title: 'Challenge template competitive', expected: 'Competitive', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH19', title: 'Streak template shows streak', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH20', title: 'Emoji bar inserts emoji', expected: 'Inserts', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH21', title: 'Share tab shows results', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH22', title: 'Share tab shows current date', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH23', title: 'Quick share button exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH24', title: 'All share buttons visible', expected: 'Visible', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH25', title: 'Template dropdown has optgroups', expected: 'Has optgroups', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH26', title: 'Save as Template option exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH27', title: 'Manage Templates option exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH28', title: 'Save Template modal opens', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH29', title: 'Save modal shows message', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH30', title: 'Can save custom template', expected: 'Saves', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH31', title: 'Custom template in dropdown', expected: 'Appears', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH32', title: 'Manage Templates sheet opens', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH33', title: 'Manage shows empty state', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH34', title: 'Manage lists saved templates', expected: 'Lists', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH35', title: 'Can use custom template', expected: 'Uses', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH36', title: 'Template variables replaced', expected: 'Replaced', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH37', title: 'Template use count increments', expected: 'Increments', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH38', title: 'Edit template modal opens', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH39', title: 'Can update template', expected: 'Updates', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH40', title: 'Can delete template', expected: 'Deletes', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH41', title: 'Max 10 templates enforced', expected: 'Enforced', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH42', title: 'Duplicate names rejected', expected: 'Rejected', steps: 'Automated', launch: '#share', note: 'Playwright' },
+        { id: 'SH43', title: 'Template help toggles', expected: 'Toggles', steps: 'Automated', launch: '#share', note: 'Playwright' }
+    ]},
+    
+    // ========== WORKFLOW TESTS (WF1-WF18) ==========
+    { id: 'workflow', name: 'User Workflows', icon: '🚀', tests: [
+        // WF1: New User from Invite
+        { id: 'WF1', title: 'Referral link captures code', expected: 'Code stored', steps: '1. Click referral link\n2. Check sessionStorage', launch: '?fresh=1#ref=TEST', note: 'Target: Code saved' },
+        { id: 'WF2', title: 'New user log first game - tap count', expected: '≤5 taps after onboarding', steps: '1. Fresh user landing\n2. Complete onboarding\n3. Log first game\n4. COUNT TAPS', launch: '?fresh=1', note: 'Target: ≤5 taps' },
+        { id: 'WF3', title: 'Referrer info shown on landing', expected: '"Dave invited you" banner', steps: '1. Click referral link\n2. Look for referrer name/banner', launch: '?fresh=1#ref=DAVE', note: 'UX: Show who invited' },
+        { id: 'WF4', title: 'Clipboard auto-detected', expected: 'Prompt appears', steps: '1. Copy Wordle result\n2. Open app\n3. Check for auto-prompt', launch: '', note: 'Target: <2 sec' },
+        
+        // WF2: Daily Return User
+        { id: 'WF5', title: 'Progress visible without scrolling', expected: 'Above fold', steps: '1. Open app (returning user)\n2. Check if progress in viewport', launch: '#home', note: 'No scroll needed' },
+        { id: 'WF6', title: 'Log button visible without scrolling', expected: 'In viewport', steps: '1. Open app\n2. Check if Log button visible', launch: '#home', note: 'No scroll needed' },
+        { id: 'WF7', title: 'Log game in ≤3 taps', expected: '≤3 taps', steps: '1. Tap Log\n2. Paste result\n3. Confirm\nCOUNT TAPS', launch: '#home', note: 'Target: ≤3 taps' },
+        { id: 'WF8', title: 'Log game under 30 seconds', expected: '<30s', steps: '1. Start timer\n2. Log a game\n3. Check time', launch: '', note: 'Target: <30s' },
+        
+        // WF3: Social Engagement
+        { id: 'WF9', title: 'See friends in ≤2 taps', expected: '≤2 taps', steps: '1. From home\n2. Navigate to friends\nCOUNT TAPS', launch: '#home', note: 'Target: ≤2 taps' },
+        { id: 'WF10', title: 'Score comparison available', expected: 'Can see vs friends', steps: '1. Go to Social\n2. Look for score comparisons', launch: '#social', note: 'Show: "You 4/6 vs Dave 3/6"' },
+        { id: 'WF11', title: 'Start battle in ≤4 taps', expected: '≤4 taps', steps: '1. Social tab\n2. Create Battle\n3. Select game\n4. Confirm\nCOUNT TAPS', launch: '#home', note: 'Target: ≤4 taps' },
+        
+        // WF4: Battle Join Flow
+        { id: 'WF12', title: 'Battle link shows details', expected: 'Details visible', steps: '1. Click battle link\n2. Check for battle info', launch: '#battle=ABC123', note: 'Show: games, duration, stakes' },
+        { id: 'WF13', title: 'Battle join shows games/duration/stakes', expected: 'All info shown', steps: '1. Open battle link\n2. Check for: games, duration, entry fee', launch: '#battle=ABC123', note: 'User knows what they join' },
+        { id: 'WF14', title: 'Join battle in ≤2 taps', expected: '≤2 taps', steps: '1. Click Join\n2. Confirm\nCOUNT TAPS', launch: '#battle=ABC123', note: 'Target: ≤2 taps' },
+        
+        // WF5: Share Flow
+        { id: 'WF15', title: 'Share tab discoverable', expected: 'Easy to find', steps: '1. Open app\n2. Look for Share option', launch: '#home', note: 'In nav or on home' },
+        { id: 'WF16', title: 'Default message has scores', expected: 'Scores included', steps: '1. Go to Share\n2. Check default message', launch: '#share', note: 'Good message by default' },
+        { id: 'WF17', title: 'Share to Twitter in ≤3 taps', expected: '≤3 taps', steps: '1. Share tab\n2. Click Twitter\nCOUNT TAPS', launch: '#home', note: 'Target: ≤3 taps' },
+        { id: 'WF18', title: 'All share platforms visible', expected: '3+ platforms', steps: '1. Go to Share\n2. Count share options', launch: '#share', note: 'Twitter, Copy, Email, SMS' }
+    ]}
+];
+
+// Export for use
+
+// ========== STATE ==========
+let currentUser = null;
+let isAdmin = false;
+let userAssignment = null;
+let testResults = {};
+let currentSection = null;
+let currentTab = 'testing';
+let consoleLogs = [];
+let debugPanelVisible = false;
+
+// Playwright integration
+let playwrightResults = {};
+let playwrightSummary = null;
+
+// ID mapping: Test Plan ID -> Playwright ID(s)
+// After sync, all IDs match directly - no mapping needed
+const PLAYWRIGHT_ID_MAP = {};
+let automationRunning = false;
+let sessionStart = Date.now();
+let detectedPlatform = null;
+
+// ========== CONSOLE CAPTURE ==========
+(function() {
+    const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+    function capture(type, args) {
+        const entry = { type, ts: new Date().toISOString(), msg: Array.from(args).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') };
+        consoleLogs.push(entry);
+        if (consoleLogs.length > 1000) consoleLogs.shift();
+        updateDebugPanel();
+        updateMetrics();
+    }
+    console.log = function() { capture('log', arguments); orig.log.apply(console, arguments); };
+    console.warn = function() { capture('warn', arguments); orig.warn.apply(console, arguments); };
+    console.error = function() { capture('error', arguments); orig.error.apply(console, arguments); };
+    console.info = function() { capture('info', arguments); orig.info.apply(console, arguments); };
+    window.onerror = (m, u, l) => { capture('error', [`Uncaught: ${m} at ${u}:${l}`]); return false; };
+    window.onunhandledrejection = e => capture('error', [`Promise: ${e.reason}`]);
+})();
+
+// ========== DARK MODE ==========
+function initDarkMode() {
+    const saved = localStorage.getItem('testplan-theme');
+    // Default to dark mode unless explicitly set to light
+    if (saved !== 'light') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+}
+
+function toggleDarkMode() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('testplan-theme', 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('testplan-theme', 'dark');
+    }
+    // Re-render user info to update icon
+    if (currentUser) renderUserInfo();
+    // Update login screen icon if visible
+    const loginIcon = document.getElementById('login-theme-icon');
+    if (loginIcon) loginIcon.textContent = isDark ? '🌙' : '☀️';
+}
+
+// Initialize dark mode immediately
+initDarkMode();
+
+// ========== AUTH ==========
+auth.onAuthStateChanged(async user => {
+    currentUser = user;
+    if (user) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        document.getElementById('debug-fab').classList.add('visible');
+        isAdmin = ADMIN_EMAILS.includes(user.email);
+        renderUserInfo();
+        await loadData();
+        renderHeaderTabs();
+        renderUI();
+        updatePlatformUI();
+        if (isAdmin) renderAdminPanel();
+        renderAutomationTests();
+        loadSavedPlaywrightResults();
+        initPlaywrightUI();
+    } else {
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('main-content').classList.add('hidden');
+    }
+});
+
+function signIn() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => toast('Sign in failed')); }
+function signOut() { auth.signOut(); }
+
+function renderUserInfo() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('user-info').innerHTML = `
+        <button class="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+            ${isDark ? '☀️' : '🌙'}
+        </button>
+        ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+        <img class="user-avatar" src="${currentUser.photoURL || ''}" alt="">
+        <span>${currentUser.displayName?.split(' ')[0] || ''}</span>
+        <button class="header-btn" onclick="signOut()">Sign Out</button>
+    `;
+}
+
+function renderHeaderTabs() {
+    const tabs = [{ id: 'testing', label: '🧪 Tests' }];
+    if (isAdmin) tabs.push({ id: 'admin', label: '👑 Admin' });
+    tabs.push({ id: 'debug', label: '🔧 Debug' }, { id: 'automation', label: '🤖 Auto' }, { id: 'reports', label: '📊 Reports' });
+    document.getElementById('header-tabs').innerHTML = tabs.map(t => 
+        `<button class="header-tab ${t.id === currentTab ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.label}</button>`
+    ).join('');
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    renderHeaderTabs();
+    ['testing', 'admin', 'debug', 'automation', 'reports'].forEach(t => 
+        document.getElementById(`tab-${t}`)?.classList.toggle('hidden', t !== tab)
+    );
+    if (tab === 'reports') renderReports();
+}
+
+// ========== DATA ==========
+async function loadData() {
+    const emailKey = currentUser.email.replace(/\./g, ',');
+    const [assignSnap, resultsSnap] = await Promise.all([
+        db.ref(`test-assignments/${emailKey}`).once('value'),
+        db.ref(`test-results/${currentUser.uid}`).once('value')
+    ]);
+    userAssignment = assignSnap.val();
+    testResults = resultsSnap.val() || {};
+}
+
+function getAssignedTests() {
+    if (isAdmin && !userAssignment) return TEST_SECTIONS.flatMap(s => s.tests);
+    if (userAssignment?.testIds) {
+        const ids = new Set(userAssignment.testIds);
+        return TEST_SECTIONS.flatMap(s => s.tests).filter(t => ids.has(t.id));
+    }
+    return [];
+}
+
+function getAssignedSections() {
+    const tests = getAssignedTests();
+    const ids = new Set(tests.map(t => t.id));
+    return TEST_SECTIONS.filter(s => s.tests.some(t => ids.has(t.id)))
+        .map(s => ({ ...s, tests: s.tests.filter(t => ids.has(t.id)) }));
+}
+
+// ========== UI ==========
+function renderUI() {
+    const tests = getAssignedTests();
+    const noTests = !tests.length && !isAdmin;
+    
+    document.getElementById('no-tests').classList.toggle('hidden', !noTests);
+    document.getElementById('section-tabs').classList.toggle('hidden', noTests);
+    document.getElementById('progress-panel').classList.toggle('hidden', noTests);
+    
+    if (userAssignment) {
+        document.getElementById('assignment-banner').classList.remove('hidden');
+        document.getElementById('assignment-desc').innerHTML = `<strong>${userAssignment.focusArea || 'General'}</strong> - ${userAssignment.testIds?.length || 0} tests assigned`;
+    }
+    
+    if (noTests) return;
+    
+    const sections = getAssignedSections();
+    if (sections.length && !currentSection) currentSection = sections[0].id;
+    
+    renderSectionTabs();
+    renderTestCards();
+    updateProgress();
+}
+
+function renderSectionTabs() {
+    const sections = getAssignedSections();
+    document.getElementById('section-tabs').innerHTML = sections.map(s => {
+        const done = s.tests.filter(t => testResults[t.id]?.status).length;
+        return `<button class="section-tab ${s.id === currentSection ? 'active' : ''}" onclick="switchSection('${s.id}')">${s.icon} ${s.name} <span class="count">${done}/${s.tests.length}</span></button>`;
+    }).join('');
+}
+
+function switchSection(id) { currentSection = id; renderSectionTabs(); renderTestCards(); }
+
+function renderTestCards() {
+    const section = getAssignedSections().find(s => s.id === currentSection);
+    if (!section) return;
+    
+    document.getElementById('test-cards').innerHTML = section.tests.map(test => {
+        const r = testResults[test.id] || {};
+        const status = r.status || 'pending';
+        const variantResults = r.variants || {};
+        const hasVariants = test.variants && test.variants.length > 0;
+        const variantStats = hasVariants ? getVariantStats(test, variantResults) : null;
+        
+        return `
+            <div class="test-card status-${status}" id="card-${test.id}">
+                <div class="test-header" onclick="toggleCard('${test.id}')">
+                    <span class="test-id">${test.id}</span>
+                    <span class="test-title">${test.title}</span>
+                    ${hasVariants ? `<span class="variant-badge" title="${variantStats.pass}/${variantStats.total} variants passed">🔀 ${variantStats.pass}/${variantStats.total}</span>` : ''}
+                    ${r.platform ? `<span class="platform-badge">${getPlatformIcon(r.platform)}</span>` : ''}
+                    <span class="test-status ${status}">${status === 'pass' ? '✓' : status === 'fail' ? '✗' : status === 'skip' ? '−' : ''}</span>
+                    <span class="test-chevron">▼</span>
+                </div>
+                <div class="test-body">
+                    <div class="launch-row">
+                        <button class="launch-btn" onclick="launchTest('${test.id}')">🚀 Launch Feature</button>
+                        <button class="launch-btn debug" onclick="launchTestDebug('${test.id}')">🔧 Launch with Debug</button>
+                    </div>
+                    <p class="launch-note">${test.note || 'Opens Game Shelf'}</p>
+                    
+                    ${test.data ? `<div class="test-data" onclick="copyData('${test.id}')" title="Click to copy">${escapeHtml(test.data)}</div><button class="btn btn-sm btn-secondary" onclick="copyData('${test.id}')">📋 Copy Test Data</button>` : ''}
+                    
+                    <div class="info-box"><h4>Expected</h4>${test.expected}</div>
+                    <div class="info-box"><h4>Steps</h4><pre style="margin:0;white-space:pre-wrap;font-family:inherit;">${test.steps}</pre></div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn pass ${status === 'pass' ? 'selected' : ''}" onclick="setStatus('${test.id}','pass')">✓ Pass</button>
+                        <button class="action-btn fail ${status === 'fail' ? 'selected' : ''}" onclick="setStatus('${test.id}','fail')">✗ Fail</button>
+                        <button class="action-btn skip ${status === 'skip' ? 'selected' : ''}" onclick="setStatus('${test.id}','skip')">− Skip</button>
+                    </div>
+                    
+                    ${hasVariants ? renderVariantsSection(test, variantResults) : ''}
+                    
+                    <div class="platform-section">
+                        <label style="font-size: 0.75rem; font-weight: 500; color: var(--gray-500); text-transform: uppercase; display: block; margin-bottom: 6px;">Tested On <button class="btn btn-sm btn-secondary" style="margin-left: 8px; padding: 2px 8px;" onclick="autoDetectPlatform('${test.id}')">🔍 Auto-detect</button></label>
+                        <div class="platform-buttons" id="platforms-${test.id}">
+                            <button class="platform-btn ${r.platform === 'desktop-chrome' ? 'selected' : ''}" onclick="setPlatform('${test.id}','desktop-chrome')">🖥️ Chrome</button>
+                            <button class="platform-btn ${r.platform === 'desktop-safari' ? 'selected' : ''}" onclick="setPlatform('${test.id}','desktop-safari')">🖥️ Safari</button>
+                            <button class="platform-btn ${r.platform === 'desktop-firefox' ? 'selected' : ''}" onclick="setPlatform('${test.id}','desktop-firefox')">🖥️ Firefox</button>
+                            <button class="platform-btn ${r.platform === 'iphone-safari' ? 'selected' : ''}" onclick="setPlatform('${test.id}','iphone-safari')">📱 iPhone Safari</button>
+                            <button class="platform-btn ${r.platform === 'iphone-pwa' ? 'selected' : ''}" onclick="setPlatform('${test.id}','iphone-pwa')">📱 iPhone PWA</button>
+                            <button class="platform-btn ${r.platform === 'android-chrome' ? 'selected' : ''}" onclick="setPlatform('${test.id}','android-chrome')">🤖 Android Chrome</button>
+                            <button class="platform-btn ${r.platform === 'android-pwa' ? 'selected' : ''}" onclick="setPlatform('${test.id}','android-pwa')">🤖 Android PWA</button>
+                            <button class="platform-btn ${r.platform === 'ipad' ? 'selected' : ''}" onclick="setPlatform('${test.id}','ipad')">📲 iPad</button>
+                        </div>
+                    </div>
+                    
+                    <textarea class="notes-input" id="notes-${test.id}" placeholder="Notes, issues, observations..." onchange="saveNotes('${test.id}')">${r.notes || ''}</textarea>
+                    
+                    <div class="screenshot-row">
+                        <label class="upload-btn">📷 Screenshot<input type="file" accept="image/*" onchange="uploadImg('${test.id}',this)"></label>
+                        <label class="upload-btn">📸 Camera<input type="file" accept="image/*" capture="environment" onchange="uploadImg('${test.id}',this)"></label>
+                        ${(r.screenshots || []).map((u, i) => `<div class="screenshot-thumb"><img src="${u}" onclick="window.open('${u}')"><button class="remove" onclick="removeImg('${test.id}',${i})">×</button></div>`).join('')}
+                    </div>
+                    
+                    <div class="console-section">
+                        <label class="console-toggle"><input type="checkbox" ${r.includeConsole ? 'checked' : ''} onchange="toggleConsole('${test.id}',this.checked)"> Attach console logs</label>
+                        ${r.consoleLogs ? `<div class="console-output">${r.consoleLogs.slice(-10).map(l => `<div class="${l.type}">[${l.type}] ${escapeHtml(l.msg)}</div>`).join('')}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Variant helper functions
+function getVariantStats(test, variantResults) {
+    const total = test.variants.length;
+    const pass = test.variants.filter((v, i) => variantResults[i] === 'pass').length;
+    const fail = test.variants.filter((v, i) => variantResults[i] === 'fail').length;
+    return { total, pass, fail };
+}
+
+function renderVariantsSection(test, variantResults) {
+    const typeIcons = { happy: '✅', edge: '⚠️', error: '❌' };
+    const typeLabels = { happy: 'Happy Path', edge: 'Edge Case', error: 'Error Case' };
+    
+    return `
+        <div class="variants-section">
+            <div class="variants-header" onclick="toggleVariants('${test.id}')">
+                <span>🔀 Test Variants (${test.variants.length})</span>
+                <span class="variants-chevron">▼</span>
+            </div>
+            <div class="variants-body" id="variants-${test.id}">
+                ${test.variants.map((v, i) => {
+                    const vStatus = variantResults[i] || 'pending';
+                    return `
+                        <div class="variant-row status-${vStatus}">
+                            <div class="variant-info">
+                                <span class="variant-type" title="${typeLabels[v.type]}">${typeIcons[v.type]}</span>
+                                <span class="variant-name">${v.name}</span>
+                            </div>
+                            <div class="variant-expected">${v.expected}</div>
+                            ${v.data ? `<div class="variant-data" onclick="copyVariantData('${escapeHtml(v.data)}')" title="Click to copy">${escapeHtml(v.data.substring(0, 50))}${v.data.length > 50 ? '...' : ''}</div>` : ''}
+                            ${v.launch ? `<button class="btn btn-sm btn-secondary" onclick="launchVariant('${v.launch}')">🚀</button>` : ''}
+                            <div class="variant-actions">
+                                <button class="variant-btn pass ${vStatus === 'pass' ? 'selected' : ''}" onclick="setVariantStatus('${test.id}',${i},'pass')">✓</button>
+                                <button class="variant-btn fail ${vStatus === 'fail' ? 'selected' : ''}" onclick="setVariantStatus('${test.id}',${i},'fail')">✗</button>
+                                <button class="variant-btn skip ${vStatus === 'skip' ? 'selected' : ''}" onclick="setVariantStatus('${test.id}',${i},'skip')">−</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                <div class="variant-actions-row">
+                    <button class="btn btn-sm btn-success" onclick="passAllVariants('${test.id}')">✓ Pass All</button>
+                    <button class="btn btn-sm btn-secondary" onclick="resetVariants('${test.id}')">🔄 Reset</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleVariants(testId) {
+    const body = document.getElementById(`variants-${testId}`);
+    body.classList.toggle('expanded');
+    body.previousElementSibling.querySelector('.variants-chevron').style.transform = 
+        body.classList.contains('expanded') ? 'rotate(180deg)' : '';
+}
+
+function setVariantStatus(testId, variantIndex, status) {
+    const existing = testResults[testId] || {};
+    const variants = existing.variants || {};
+    variants[variantIndex] = status;
+    saveResult(testId, { ...existing, variants });
+    renderTestCards();
+}
+
+function passAllVariants(testId) {
+    const test = TEST_SECTIONS.flatMap(s => s.tests).find(t => t.id === testId);
+    if (!test || !test.variants) return;
+    const existing = testResults[testId] || {};
+    const variants = {};
+    test.variants.forEach((v, i) => variants[i] = 'pass');
+    saveResult(testId, { ...existing, variants, status: 'pass' });
+    renderTestCards();
+}
+
+function resetVariants(testId) {
+    const existing = testResults[testId] || {};
+    saveResult(testId, { ...existing, variants: {} });
+    renderTestCards();
+}
+
+function copyVariantData(data) {
+    navigator.clipboard.writeText(data);
+    toast('Variant data copied!');
+}
+
+function launchVariant(launch) {
+    const debugParams = getDebugParams();
+    const url = GAMESHELF_URL + launch + (launch.includes('?') ? '&' : '?') + debugParams;
+    window.open(url, '_blank');
+    toast('Launching variant test...');
+}
+
+// ========== LAUNCH ==========
+function launchTest(id) {
+    const test = TEST_SECTIONS.flatMap(s => s.tests).find(t => t.id === id);
+    window.open(GAMESHELF_URL + (test?.launch || ''), '_blank');
+    toast('Launching Game Shelf...');
+}
+
+function launchTestDebug(id) {
+    const test = TEST_SECTIONS.flatMap(s => s.tests).find(t => t.id === id);
+    const debugParams = getDebugParams();
+    const url = GAMESHELF_URL + (test?.launch || '') + (test?.launch?.includes('?') ? '&' : '?') + debugParams;
+    window.open(url, '_blank');
+    toast('Launching with debug mode...');
+}
+
+function launchWithDebug() {
+    const debugParams = getDebugParams();
+    window.open(GAMESHELF_URL + '?' + debugParams, '_blank');
+    toast('Launching with debug...');
+}
+
+function getDebugParams() {
+    const opts = [];
+    if (document.getElementById('debug-console')?.checked) opts.push('debugConsole=1');
+    if (document.getElementById('debug-network')?.checked) opts.push('debugNetwork=1');
+    if (document.getElementById('debug-performance')?.checked) opts.push('debugPerf=1');
+    if (document.getElementById('debug-storage')?.checked) opts.push('debugStorage=1');
+    if (document.getElementById('debug-events')?.checked) opts.push('debugEvents=1');
+    if (document.getElementById('debug-errors')?.checked) opts.push('debugErrors=1');
+    return opts.join('&');
+}
+
+function copyDebugBookmarklet() {
+    const code = `javascript:(function(){localStorage.setItem('gs-debug',JSON.stringify({console:true,network:true,perf:true,storage:true,events:true,errors:true}));location.reload();})();`;
+    navigator.clipboard.writeText(code);
+    toast('Bookmarklet copied! Add to browser bookmarks.');
+}
+
+function copyData(id) {
+    const test = TEST_SECTIONS.flatMap(s => s.tests).find(t => t.id === id);
+    if (test?.data) { navigator.clipboard.writeText(test.data); toast('Test data copied!'); }
+}
+
+// ========== TEST RESULTS ==========
+function setStatus(id, status) { 
+    const existing = testResults[id] || {};
+    // Auto-apply detected platform if not already set
+    const platform = existing.platform || detectedPlatform;
+    saveResult(id, { ...existing, status, platform }); 
+    renderTestCards(); 
+}
+function setPlatform(id, platform) { saveResult(id, { ...(testResults[id] || {}), platform }); renderTestCards(); }
+function saveNotes(id) { saveResult(id, { ...(testResults[id] || {}), notes: document.getElementById(`notes-${id}`).value }); }
+function toggleConsole(id, on) { saveResult(id, { ...(testResults[id] || {}), includeConsole: on, consoleLogs: on ? consoleLogs.slice(-50) : null }); }
+
+function saveResult(id, data) {
+    testResults[id] = { ...data, tester: { uid: currentUser.uid, name: currentUser.displayName, email: currentUser.email }, updatedAt: new Date().toISOString(), device: navigator.userAgent, screen: `${innerWidth}x${innerHeight}` };
+    db.ref(`test-results/${currentUser.uid}/${id}`).set(testResults[id]).then(() => { updateProgress(); toast('Saved'); });
+}
+
+async function uploadImg(id, input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        const r = testResults[id] || {};
+        const shots = r.screenshots || [];
+        shots.push(reader.result);
+        saveResult(id, { ...r, screenshots: shots });
+        renderTestCards();
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function removeImg(id, i) {
+    const r = testResults[id] || {};
+    const shots = r.screenshots || [];
+    shots.splice(i, 1);
+    saveResult(id, { ...r, screenshots: shots });
+    renderTestCards();
+}
+
+function updateProgress() {
+    const tests = getAssignedTests();
+    let pass = 0, fail = 0, skip = 0, pending = 0;
+    tests.forEach(t => { const s = testResults[t.id]?.status; if (s === 'pass') pass++; else if (s === 'fail') fail++; else if (s === 'skip') skip++; else pending++; });
+    const done = pass + fail + skip;
+    document.getElementById('progress-fill').style.width = (tests.length ? done / tests.length * 100 : 0) + '%';
+    document.getElementById('progress-text').textContent = `${done}/${tests.length} (${tests.length ? Math.round(done / tests.length * 100) : 0}%)`;
+    document.getElementById('cnt-pass').textContent = pass;
+    document.getElementById('cnt-fail').textContent = fail;
+    document.getElementById('cnt-skip').textContent = skip;
+    document.getElementById('cnt-pending').textContent = pending;
+    renderSectionTabs();
+}
+
+// ========== ADMIN ==========
+function renderAdminPanel() {
+    document.getElementById('test-grid').innerHTML = TEST_SECTIONS.map(s => `
+        <div class="section-header">${s.icon} ${s.name} <button class="select-all-btn" onclick="selectSection('${s.id}')">All</button></div>
+        ${s.tests.map(t => `<label class="test-checkbox"><input type="checkbox" value="${t.id}">${t.id}</label>`).join('')}
+    `).join('');
+}
+
+function selectSection(id) {
+    const sec = TEST_SECTIONS.find(s => s.id === id);
+    sec?.tests.forEach(t => { const cb = document.querySelector(`#test-grid input[value="${t.id}"]`); if (cb) cb.checked = true; });
+}
+
+function switchAdminTab(tab) {
+    document.querySelectorAll('#tab-admin .tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().includes(tab)));
+    document.getElementById('admin-assign').classList.toggle('hidden', tab !== 'assign');
+    document.getElementById('admin-view').classList.toggle('hidden', tab !== 'view');
+    document.getElementById('admin-results').classList.toggle('hidden', tab !== 'results');
+    if (tab === 'view') loadAssignments();
+    if (tab === 'results') loadAllResults();
+}
+
+async function createAssignment() {
+    const email = document.getElementById('assign-email').value.trim();
+    const focus = document.getElementById('assign-focus').value.trim();
+    const ids = Array.from(document.querySelectorAll('#test-grid input:checked')).map(c => c.value);
+    if (!email) return toast('Enter email');
+    if (!ids.length) return toast('Select tests');
+    const key = email.replace(/\./g, ',');
+    await db.ref(`test-assignments/${key}`).set({ email, focusArea: focus || 'General', testIds: ids, createdAt: new Date().toISOString(), createdBy: currentUser.email });
+    toast(`Assigned ${ids.length} tests`);
+    document.getElementById('assign-email').value = '';
+    document.getElementById('assign-focus').value = '';
+    document.querySelectorAll('#test-grid input:checked').forEach(c => c.checked = false);
+}
+
+async function loadAssignments() {
+    const snap = await db.ref('test-assignments').once('value');
+    const data = snap.val() || {};
+    document.getElementById('admin-view').innerHTML = Object.entries(data).length ? Object.entries(data).map(([k, a]) => `
+        <div class="assignment-card">
+            <div><h4>${a.email}</h4><p>${a.focusArea}</p></div>
+            <span class="badge">${a.testIds?.length || 0}</span>
+            <button class="btn btn-danger btn-sm" onclick="deleteAssignment('${k}')">🗑️</button>
+        </div>
+    `).join('') : '<p style="color:var(--gray-500)">No assignments</p>';
+}
+
+async function deleteAssignment(key) {
+    if (!confirm('Delete?')) return;
+    await db.ref(`test-assignments/${key}`).remove();
+    toast('Deleted');
+    loadAssignments();
+}
+
+async function loadAllResults() {
+    const snap = await db.ref('test-results').once('value');
+    const data = snap.val() || {};
+    const rows = Object.entries(data).map(([uid, results]) => {
+        const tests = Object.values(results);
+        const platforms = [...new Set(tests.map(t => t.platform).filter(Boolean))];
+        return { 
+            name: tests[0]?.tester?.name || uid, 
+            pass: tests.filter(t => t.status === 'pass').length, 
+            fail: tests.filter(t => t.status === 'fail').length, 
+            total: tests.length,
+            platforms: platforms
+        };
+    });
+    document.getElementById('admin-results').innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="exportAllResults()" style="margin-bottom:10px;">📊 Export All</button>
+        <table style="width:100%;font-size:0.8rem;border-collapse:collapse;">
+            <tr style="background:var(--gray-100)"><th style="padding:6px;text-align:left">Tester</th><th>Pass</th><th>Fail</th><th>Total</th><th style="text-align:left">Platforms</th></tr>
+            ${rows.map(r => `<tr style="border-bottom:1px solid var(--gray-200)"><td style="padding:6px">${r.name}</td><td style="text-align:center;color:var(--success)">${r.pass}</td><td style="text-align:center;color:var(--danger)">${r.fail}</td><td style="text-align:center">${r.total}</td><td style="padding:6px;font-size:0.7rem">${r.platforms.map(p => getPlatformIcon(p)).join(', ') || '-'}</td></tr>`).join('')}
+        </table>
+    `;
+}
+
+async function exportAllResults() {
+    const snap = await db.ref('test-results').once('value');
+    navigator.clipboard.writeText(JSON.stringify(snap.val(), null, 2));
+    toast('All results copied!');
+}
+
+// ========== DEBUG ==========
+function updateDebugPanel() {
+    document.getElementById('log-count').textContent = consoleLogs.length;
+    document.getElementById('debug-content').innerHTML = consoleLogs.slice(-100).map(l => `<div class="debug-entry ${l.type}">[${l.type}] ${escapeHtml(l.msg)}</div>`).join('');
+    document.getElementById('debug-content').scrollTop = 99999;
+}
+
+function toggleDebugPanel() {
+    debugPanelVisible = !debugPanelVisible;
+    document.getElementById('debug-panel').classList.toggle('visible', debugPanelVisible);
+}
+
+function clearLogs() { consoleLogs = []; updateDebugPanel(); }
+
+function updateMetrics() {
+    document.getElementById('metric-errors').textContent = consoleLogs.filter(l => l.type === 'error').length;
+    document.getElementById('metric-warnings').textContent = consoleLogs.filter(l => l.type === 'warn').length;
+    document.getElementById('metric-logs').textContent = consoleLogs.length;
+    document.getElementById('metric-duration').textContent = Math.round((Date.now() - sessionStart) / 1000) + 's';
+}
+
+function clearMetrics() { consoleLogs = []; sessionStart = Date.now(); updateMetrics(); updateDebugPanel(); toast('Metrics cleared'); }
+
+// ========== AUTOMATION ==========
+function renderAutomationTests() {
+    document.getElementById('automation-tests').innerHTML = TEST_SECTIONS.map(s => `
+        <div class="section-header">${s.icon} ${s.name} <button class="select-all-btn" onclick="selectAutoSection('${s.id}')">All</button></div>
+        ${s.tests.map(t => `<label class="test-checkbox"><input type="checkbox" value="${t.id}" class="auto-test">${t.id}: ${t.title.substring(0, 25)}...${getPlaywrightBadge(t.id)}</label>`).join('')}
+    `).join('');
+}
+
+function selectAutoSection(id) {
+    const sec = TEST_SECTIONS.find(s => s.id === id);
+    sec?.tests.forEach(t => { const cb = document.querySelector(`.auto-test[value="${t.id}"]`); if (cb) cb.checked = true; });
+}
+
+function addAutoLog(msg, type = 'info') {
+    const log = document.getElementById('automation-log');
+    log.innerHTML += `<div class="${type}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+    log.scrollTop = 99999;
+}
+
+function updateAutoStatus(text, detail) {
+    document.getElementById('automation-status').innerHTML = `<div class="status-text">${text}</div><div class="status-detail">${detail}</div>`;
+}
+
+// Automation state
+let autoTestQueue = [];
+let autoCurrentIndex = 0;
+let autoWindow = null;
+let autoTimer = null;
+let autoCountdown = 0;
+let lastAutoUrl = '';
+
+async function runAllTests() {
+    const tests = getAssignedTests();
+    document.querySelectorAll('.auto-test').forEach(cb => { cb.checked = tests.some(t => t.id === cb.value); });
+    await runSelectedTests();
+}
+
+async function runSelectedTests() {
+    const selected = Array.from(document.querySelectorAll('.auto-test:checked')).map(cb => cb.value);
+    if (!selected.length) return toast('Select tests first');
+    
+    autoTestQueue = selected;
+    autoCurrentIndex = 0;
+    automationRunning = true;
+    
+    const isAutoAdvance = document.getElementById('auto-advance')?.checked;
+    const delay = document.getElementById('auto-delay')?.value || '5';
+    
+    addAutoLog(`Queued ${selected.length} tests`, 'info');
+    addAutoLog(`Mode: ${isAutoAdvance ? `Auto-advance every ${delay}s` : 'Manual (click Next Test)'}`, 'info');
+    
+    // Start first test
+    runNextTest();
+}
+
+async function runNextTest() {
+    // Clear any existing timer
+    if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+    }
+    
+    if (!automationRunning || autoCurrentIndex >= autoTestQueue.length) {
+        automationRunning = false;
+        lastAutoUrl = '';
+        updateAutoStatus('✅ Complete', `${autoTestQueue.length} tests run`);
+        addAutoLog('All tests complete!', 'success');
+        return;
+    }
+    
+    const testId = autoTestQueue[autoCurrentIndex];
+    const test = TEST_SECTIONS.flatMap(s => s.tests).find(t => t.id === testId);
+    const isAutoAdvance = document.getElementById('auto-advance')?.checked;
+    const delay = parseInt(document.getElementById('auto-delay')?.value || '5');
+    
+    addAutoLog(`Running ${testId}: ${test?.title}`, 'info');
+    
+    // Build URL - only if test has a launch parameter
+    const hasLaunch = test?.launch && test.launch.length > 0;
+    
+    if (hasLaunch) {
+        const debugParams = getDebugParams();
+        let url = GAMESHELF_URL + test.launch;
+        const separator = url.includes('?') ? '&' : '?';
+        if (debugParams) url += separator + debugParams;
+        
+        // For ?fresh=1 tests, close existing window to ensure clean state
+        const needsFreshWindow = test.launch.includes('fresh=1');
+        if (needsFreshWindow && autoWindow && !autoWindow.closed) {
+            addAutoLog('Closing window for fresh start...', 'info');
+            autoWindow.close();
+            autoWindow = null;
+            // Small delay to ensure window is closed
+            await new Promise(r => setTimeout(r, 500));
+        }
+        
+        // Only navigate if URL is different from last (or fresh window needed)
+        if (url !== lastAutoUrl || needsFreshWindow) {
+            addAutoLog(`Opening: ${url}`, 'info');
+            lastAutoUrl = url;
+            
+            // Reuse same window to avoid popup blockers (unless fresh needed)
+            if (autoWindow && !autoWindow.closed) {
+                autoWindow.location.href = url;
+                autoWindow.focus();
+            } else {
+                autoWindow = window.open(url, 'gameshelf-test');
+            }
+        } else {
+            addAutoLog(`Same URL - continuing in current window`, 'info');
+            if (autoWindow && !autoWindow.closed) autoWindow.focus();
+        }
+    } else {
+        addAutoLog(`Continue in current window (${test?.note || 'sequential test'})`, 'info');
+        if (autoWindow && !autoWindow.closed) autoWindow.focus();
+    }
+    
+    // Start countdown if auto-advance is enabled
+    if (isAutoAdvance) {
+        autoCountdown = delay;
+        updateAutoStatus(
+            `🔄 Test ${autoCurrentIndex + 1}/${autoTestQueue.length}: ${testId}`,
+            `${test?.title || ''} - Next in ${autoCountdown}s`
+        );
+        
+        autoTimer = setInterval(() => {
+            autoCountdown--;
+            if (autoCountdown <= 0) {
+                clearInterval(autoTimer);
+                autoTimer = null;
+                addAutoLog(`${testId} auto-advanced`, 'success');
+                autoCurrentIndex++;
+                runNextTest();
+            } else {
+                updateAutoStatus(
+                    `🔄 Test ${autoCurrentIndex + 1}/${autoTestQueue.length}: ${testId}`,
+                    `${test?.title || ''} - Next in ${autoCountdown}s`
+                );
+            }
+        }, 1000);
+    } else {
+        updateAutoStatus(
+            `🔄 Test ${autoCurrentIndex + 1}/${autoTestQueue.length}: ${testId}`,
+            `${test?.title || ''} - Click "Next Test" when done`
+        );
+    }
+}
+
+function nextTest() {
+    if (!automationRunning) return toast('Start automation first');
+    
+    // Clear timer if running
+    if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+    }
+    
+    const testId = autoTestQueue[autoCurrentIndex];
+    addAutoLog(`${testId} marked as reviewed`, 'success');
+    
+    autoCurrentIndex++;
+    runNextTest();
+}
+
+function skipTest() {
+    if (!automationRunning) return toast('Start automation first');
+    
+    // Clear timer if running
+    if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+    }
+    
+    const testId = autoTestQueue[autoCurrentIndex];
+    addAutoLog(`${testId} skipped`, 'warn');
+    
+    autoCurrentIndex++;
+    runNextTest();
+}
+
+function stopTests() {
+    // Clear timer
+    if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+    }
+    
+    automationRunning = false;
+    autoTestQueue = [];
+    autoCurrentIndex = 0;
+    lastAutoUrl = '';
+    updateAutoStatus('⏹️ Stopped', 'Automation halted');
+    addAutoLog('Automation stopped', 'error');
+}
+
+function resetAutomation() {
+    // Clear timer
+    if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+    }
+    
+    automationRunning = false;
+    autoTestQueue = [];
+    autoCurrentIndex = 0;
+    lastAutoUrl = '';
+    if (autoWindow && !autoWindow.closed) autoWindow.close();
+    autoWindow = null;
+    document.getElementById('automation-log').innerHTML = '<div class="info">[Ready] Automation runner reset</div>';
+    updateAutoStatus('⏸️ Ready', 'Select tests and click Run');
+    document.querySelectorAll('.auto-test').forEach(cb => cb.checked = false);
+}
+
+// ========== REPORTS ==========
+function renderReports() {
+    const tests = getAssignedTests();
+    const results = testResults;
+    
+    // Calculate summary stats
+    let pass = 0, fail = 0, skip = 0, pending = 0;
+    tests.forEach(t => {
+        const status = results[t.id]?.status;
+        if (status === 'pass') pass++;
+        else if (status === 'fail') fail++;
+        else if (status === 'skip') skip++;
+        else pending++;
+    });
+    
+    // Update summary cards
+    document.getElementById('rpt-total').textContent = tests.length;
+    document.getElementById('rpt-pass').textContent = pass;
+    document.getElementById('rpt-fail').textContent = fail;
+    document.getElementById('rpt-skip').textContent = skip;
+    document.getElementById('rpt-pending').textContent = pending;
+    
+    // Platform coverage
+    renderPlatformCoverage(tests, results);
+    
+    // Section progress
+    renderSectionProgress(tests, results);
+    
+    // Attention list
+    renderAttentionList(tests, results);
+    
+    // Coverage matrix
+    renderCoverageMatrix(tests, results);
+}
+
+function renderPlatformCoverage(tests, results) {
+    const platforms = [
+        { id: 'desktop-chrome', icon: '🖥️', name: 'Chrome' },
+        { id: 'desktop-safari', icon: '🖥️', name: 'Safari' },
+        { id: 'desktop-firefox', icon: '🖥️', name: 'Firefox' },
+        { id: 'iphone-safari', icon: '📱', name: 'iPhone Safari' },
+        { id: 'iphone-pwa', icon: '📱', name: 'iPhone PWA' },
+        { id: 'android-chrome', icon: '🤖', name: 'Android Chrome' },
+        { id: 'android-pwa', icon: '🤖', name: 'Android PWA' },
+        { id: 'ipad', icon: '📲', name: 'iPad' }
+    ];
+    
+    const platformStats = {};
+    platforms.forEach(p => platformStats[p.id] = { pass: 0, fail: 0, total: 0 });
+    
+    tests.forEach(t => {
+        const r = results[t.id];
+        if (r?.platform && platformStats[r.platform]) {
+            platformStats[r.platform].total++;
+            if (r.status === 'pass') platformStats[r.platform].pass++;
+            if (r.status === 'fail') platformStats[r.platform].fail++;
+        }
+    });
+    
+    const maxTests = Math.max(...Object.values(platformStats).map(s => s.total), 1);
+    
+    document.getElementById('platform-coverage').innerHTML = platforms.map(p => {
+        const stats = platformStats[p.id];
+        const pct = stats.total ? Math.round((stats.total / tests.length) * 100) : 0;
+        const passPct = stats.total ? Math.round((stats.pass / stats.total) * 100) : 0;
+        const barWidth = (stats.total / maxTests) * 100;
+        
+        let fillClass = 'pass';
+        if (stats.fail > 0 && stats.pass > 0) fillClass = 'mixed';
+        else if (stats.fail > 0) fillClass = 'fail';
+        
+        return `
+            <div class="platform-row">
+                <div class="platform-icon">${p.icon}</div>
+                <div class="platform-name">${p.name}</div>
+                <div class="platform-bar">
+                    <div class="platform-fill ${fillClass}" style="width: ${barWidth}%; --pass-pct: ${passPct}%;">
+                        ${stats.total > 0 ? stats.total : ''}
+                    </div>
+                </div>
+                <div class="platform-stats">
+                    ${stats.total > 0 ? `${stats.pass}✓ ${stats.fail > 0 ? stats.fail + '✗' : ''}` : '<span style="color: var(--gray-400)">No tests</span>'}
+                </div>
+            </div>
+        `;
+    }).join('') + `
+        <div style="margin-top: 12px; padding: 10px; background: #fef3c7; border-radius: 6px; font-size: 0.8rem;">
+            <strong>📌 Not yet tested on any platform:</strong> ${tests.filter(t => !results[t.id]?.platform).length} tests
+        </div>
+    `;
+}
+
+function renderSectionProgress(tests, results) {
+    document.getElementById('section-progress').innerHTML = TEST_SECTIONS.map(section => {
+        const sectionTests = section.tests.filter(t => tests.some(at => at.id === t.id));
+        if (!sectionTests.length) return '';
+        
+        let pass = 0, fail = 0, skip = 0;
+        sectionTests.forEach(t => {
+            const status = results[t.id]?.status;
+            if (status === 'pass') pass++;
+            else if (status === 'fail') fail++;
+            else if (status === 'skip') skip++;
+        });
+        
+        const total = sectionTests.length;
+        const passPct = (pass / total) * 100;
+        const failPct = (fail / total) * 100;
+        const skipPct = (skip / total) * 100;
+        
+        return `
+            <div class="section-row">
+                <div class="section-icon">${section.icon}</div>
+                <div class="section-name">${section.name}</div>
+                <div class="section-bar">
+                    <div class="bar-segment pass" style="width: ${passPct}%"></div>
+                    <div class="bar-segment fail" style="width: ${failPct}%"></div>
+                    <div class="bar-segment skip" style="width: ${skipPct}%"></div>
+                </div>
+                <div class="section-stats">${pass + fail + skip}/${total}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderAttentionList(tests, results) {
+    const failedTests = tests.filter(t => results[t.id]?.status === 'fail');
+    const noPlatformTests = tests.filter(t => results[t.id]?.status && !results[t.id]?.platform);
+    
+    let html = '';
+    
+    if (failedTests.length === 0 && noPlatformTests.length === 0) {
+        html = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">✅ All tests looking good!</p>';
+    } else {
+        if (failedTests.length > 0) {
+            html += '<h4 style="font-size: 0.8rem; color: var(--danger); margin-bottom: 8px;">Failed Tests</h4>';
+            html += failedTests.map(t => `
+                <div class="attention-item">
+                    <span class="attention-id">${t.id}</span>
+                    <span class="attention-title">${t.title}</span>
+                    <span class="attention-badge fail">FAIL</span>
+                </div>
+            `).join('');
+        }
+        
+        if (noPlatformTests.length > 0) {
+            html += '<h4 style="font-size: 0.8rem; color: var(--warning); margin: 16px 0 8px;">Missing Platform</h4>';
+            html += noPlatformTests.slice(0, 10).map(t => `
+                <div class="attention-item warning">
+                    <span class="attention-id">${t.id}</span>
+                    <span class="attention-title">${t.title}</span>
+                    <span class="attention-badge no-platform">No Platform</span>
+                </div>
+            `).join('');
+            if (noPlatformTests.length > 10) {
+                html += `<p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 8px;">...and ${noPlatformTests.length - 10} more</p>`;
+            }
+        }
+    }
+    
+    document.getElementById('attention-list').innerHTML = html;
+}
+
+function renderCoverageMatrix(tests, results) {
+    const platforms = [
+        { id: 'desktop-chrome', short: '🖥️ Chr' },
+        { id: 'desktop-safari', short: '🖥️ Saf' },
+        { id: 'desktop-firefox', short: '🖥️ FF' },
+        { id: 'iphone-safari', short: '📱 iOS' },
+        { id: 'iphone-pwa', short: '📱 PWA' },
+        { id: 'android-chrome', short: '🤖 And' },
+        { id: 'android-pwa', short: '🤖 PWA' },
+        { id: 'ipad', short: '📲 iPad' }
+    ];
+    
+    let html = '<table class="matrix-table"><thead><tr><th>Section</th>';
+    platforms.forEach(p => html += `<th>${p.short}</th>`);
+    html += '</tr></thead><tbody>';
+    
+    TEST_SECTIONS.forEach(section => {
+        const sectionTests = section.tests.filter(t => tests.some(at => at.id === t.id));
+        if (!sectionTests.length) return;
+        
+        html += `<tr><td class="section-header-cell">${section.icon} ${section.name}</td>`;
+        
+        platforms.forEach(platform => {
+            const platformTests = sectionTests.filter(t => results[t.id]?.platform === platform.id);
+            const passCount = platformTests.filter(t => results[t.id]?.status === 'pass').length;
+            const failCount = platformTests.filter(t => results[t.id]?.status === 'fail').length;
+            const total = platformTests.length;
+            
+            let cellClass = 'none';
+            let cellContent = '-';
+            
+            if (total > 0) {
+                if (failCount > 0) {
+                    cellClass = 'has-fail';
+                    cellContent = `${passCount}/${total}`;
+                } else if (total === sectionTests.length) {
+                    cellClass = 'full';
+                    cellContent = '✓';
+                } else {
+                    cellClass = 'partial';
+                    cellContent = total;
+                }
+            }
+            
+            html += `<td class="matrix-cell ${cellClass}">${cellContent}</td>`;
+        });
+        
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    
+    // Add legend
+    html += `
+        <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 0.7rem; color: var(--gray-500);">
+            <span><span style="display: inline-block; width: 12px; height: 12px; background: var(--success); border-radius: 2px;"></span> All pass</span>
+            <span><span style="display: inline-block; width: 12px; height: 12px; background: #fef3c7; border-radius: 2px;"></span> Partial</span>
+            <span><span style="display: inline-block; width: 12px; height: 12px; background: #fee2e2; border-radius: 2px;"></span> Has failures</span>
+            <span><span style="display: inline-block; width: 12px; height: 12px; background: var(--gray-50); border-radius: 2px;"></span> Not tested</span>
+        </div>
+    `;
+    
+    document.getElementById('coverage-matrix').innerHTML = html;
+}
+
+// ========== SCRIPT GENERATION ==========
+function generatePlaywright() {
+    const tests = getAssignedTests();
+    const script = `import { test, expect } from '@playwright/test';
+
+const GAMESHELF_URL = '${GAMESHELF_URL}';
+
+${tests.map(t => `
+test('${t.id}: ${t.title}', async ({ page }) => {
+    await page.goto(GAMESHELF_URL + '${t.launch || ''}');
+    // Expected: ${t.expected}
+    // TODO: Add assertions
+    await page.waitForTimeout(2000);
+});
+`).join('')}`;
+    
+    downloadFile(script, 'gameshelf.spec.ts', 'text/typescript');
+    toast('Playwright script downloaded');
+}
+
+function generateCypress() {
+    const tests = getAssignedTests();
+    const script = `describe('Game Shelf Tests', () => {
+    const GAMESHELF_URL = '${GAMESHELF_URL}';
+    
+${tests.map(t => `
+    it('${t.id}: ${t.title}', () => {
+        cy.visit(GAMESHELF_URL + '${t.launch || ''}');
+        // Expected: ${t.expected}
+        // TODO: Add assertions
+        cy.wait(2000);
+    });
+`).join('')}
+});`;
+    
+    downloadFile(script, 'gameshelf.cy.js', 'text/javascript');
+    toast('Cypress script downloaded');
+}
+
+function generatePuppeteer() {
+    const tests = getAssignedTests();
+    const script = `const puppeteer = require('puppeteer');
+
+const GAMESHELF_URL = '${GAMESHELF_URL}';
+
+(async () => {
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    
+${tests.map(t => `
+    // ${t.id}: ${t.title}
+    // Expected: ${t.expected}
+    console.log('Running ${t.id}...');
+    await page.goto(GAMESHELF_URL + '${t.launch || ''}');
+    await page.waitForTimeout(2000);
+    // TODO: Add assertions
+`).join('')}
+    
+    await browser.close();
+})();`;
+    
+    downloadFile(script, 'gameshelf.puppeteer.js', 'text/javascript');
+    toast('Puppeteer script downloaded');
+}
+
+// ========== PLAYWRIGHT INTEGRATION ==========
+
+function importPlaywrightFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            processPlaywrightResults(data);
+            toast('✅ Playwright results imported!');
+        } catch (err) {
+            toast('❌ Invalid JSON file: ' + err.message);
+            console.error('Import error:', err);
+        }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input so same file can be re-imported
+    event.target.value = '';
+}
+
+function processPlaywrightResults(data) {
+    // Handle both our custom format and Playwright's native JSON format
+    let results = [];
+    let summary = {};
+    
+    if (data.results && Array.isArray(data.results)) {
+        // Our custom firebase-reporter format
+        results = data.results;
+        summary = data.summary || {};
+    } else if (data.suites && Array.isArray(data.suites)) {
+        // Playwright's native JSON reporter format
+        results = extractFromPlaywrightNative(data);
+        summary = {
+            total: results.length,
+            passed: results.filter(r => r.status === 'passed').length,
+            failed: results.filter(r => r.status === 'failed').length,
+            skipped: results.filter(r => r.status === 'skipped').length,
+            duration: data.stats?.duration || 0,
+            timestamp: new Date().toISOString()
+        };
+    } else {
+        throw new Error('Unrecognized JSON format');
+    }
+    
+    // Store results indexed by test ID
+    playwrightResults = {};
+    results.forEach(r => {
+        // Extract ID from title if needed
+        let id = r.id;
+        if (!id && r.title) {
+            const match = r.title.match(/^([A-Z]+\d+):/);
+            if (match) id = match[1];
+        }
+        if (id) {
+            playwrightResults[id] = {
+                status: r.status,
+                duration: r.duration,
+                error: r.error,
+                title: r.title
+            };
+        }
+    });
+    
+    playwrightSummary = summary;
+    
+    // Update UI
+    updatePlaywrightSummaryUI();
+    renderAutomationTests(); // Re-render to show badges
+    renderReports(); // Update reports if on that tab
+    updatePushButtonVisibility(); // Show Push button if on localhost
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('playwrightResults', JSON.stringify(playwrightResults));
+    localStorage.setItem('playwrightSummary', JSON.stringify(playwrightSummary));
+}
+
+function extractFromPlaywrightNative(data) {
+    // Extract test results from Playwright's native JSON structure
+    const results = [];
+    
+    function walkSuites(suites) {
+        for (const suite of suites) {
+            if (suite.specs) {
+                for (const spec of suite.specs) {
+                    for (const test of spec.tests || []) {
+                        for (const result of test.results || []) {
+                            results.push({
+                                id: null, // Will extract from title
+                                title: spec.title,
+                                status: result.status,
+                                duration: result.duration,
+                                error: result.error?.message
+                            });
+                        }
+                    }
+                }
+            }
+            if (suite.suites) {
+                walkSuites(suite.suites);
+            }
+        }
+    }
+    
+    if (data.suites) walkSuites(data.suites);
+    return results;
+}
+
+function updatePlaywrightSummaryUI() {
+    const summaryEl = document.getElementById('playwright-summary');
+    const failuresEl = document.getElementById('playwright-failures');
+    
+    if (!playwrightSummary || !Object.keys(playwrightResults).length) {
+        summaryEl.style.display = 'none';
+        failuresEl.style.display = 'none';
+        return;
+    }
+    
+    summaryEl.style.display = 'block';
+    document.getElementById('pw-total').textContent = playwrightSummary.total || Object.keys(playwrightResults).length;
+    document.getElementById('pw-passed').textContent = playwrightSummary.passed || 0;
+    document.getElementById('pw-failed').textContent = playwrightSummary.failed || 0;
+    document.getElementById('pw-skipped').textContent = playwrightSummary.skipped || 0;
+    document.getElementById('pw-duration').textContent = formatDuration(playwrightSummary.duration || 0);
+    document.getElementById('pw-timestamp').textContent = playwrightSummary.timestamp ? 
+        new Date(playwrightSummary.timestamp).toLocaleString() : '';
+    
+    // Show failures
+    const failures = Object.entries(playwrightResults).filter(([id, r]) => r.status === 'failed');
+    if (failures.length > 0) {
+        failuresEl.style.display = 'block';
+        document.getElementById('pw-failure-list').innerHTML = failures.map(([id, r]) => `
+            <div style="padding: 8px; background: rgba(239,68,68,0.1); border-radius: 6px; margin-bottom: 6px; font-size: 0.8rem;">
+                <strong>${id}</strong>: ${r.title || ''}
+                ${r.error ? `<div style="color: var(--danger); margin-top: 4px; font-size: 0.75rem;">${escapeHtml(r.error.substring(0, 200))}</div>` : ''}
+            </div>
+        `).join('');
+    } else {
+        failuresEl.style.display = 'none';
+    }
+}
+
+function formatDuration(ms) {
+    if (ms < 1000) return ms + 'ms';
+    if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
+    return (ms / 60000).toFixed(1) + 'm';
+}
+
+function clearPlaywrightResults() {
+    playwrightResults = {};
+    playwrightSummary = null;
+    localStorage.removeItem('playwrightResults');
+    localStorage.removeItem('playwrightSummary');
+    updatePlaywrightSummaryUI();
+    renderAutomationTests();
+    toast('Playwright results cleared');
+}
+
+// ========== CLOUD SYNC FOR PLAYWRIGHT RESULTS ==========
+
+function isLocalhost() {
+    return window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' ||
+           window.location.port === '3000';
+}
+
+function initPlaywrightUI() {
+    const panel = document.getElementById('playwright-panel');
+    
+    if (isLocalhost()) {
+        // Localhost: Show full Playwright UI
+        if (panel) panel.style.display = 'block';
+        console.log('🤖 Playwright UI enabled (localhost mode)');
+    } else {
+        // GitHub hosted: Hide Playwright UI, auto-pull results
+        if (panel) panel.style.display = 'none';
+        console.log('🤖 Playwright UI hidden (GitHub mode) - will auto-pull results');
+        
+        // Auto-pull results from Firebase after auth
+        setTimeout(() => {
+            if (currentUser) {
+                autoPullPlaywrightResults();
+            }
+        }, 2000);
+    }
+}
+
+function updatePushButtonVisibility() {
+    const pushBtn = document.getElementById('push-results-btn');
+    if (pushBtn && isLocalhost()) {
+        // Show Push button only when there are results to push
+        pushBtn.style.display = Object.keys(playwrightResults).length > 0 ? 'inline-block' : 'none';
+    }
+}
+
+function showCloudStatus(message, isError = false) {
+    const statusEl = document.getElementById('cloud-status');
+    const textEl = document.getElementById('cloud-status-text');
+    if (statusEl && textEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = isError ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)';
+        statusEl.style.borderLeft = `3px solid ${isError ? 'var(--danger)' : 'var(--success)'}`;
+        textEl.textContent = message;
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            statusEl.style.display = 'none';
+        }, 5000);
+    }
+}
+
+async function pushResultsToCloud() {
+    if (!currentUser) {
+        toast('Please sign in first');
+        return;
+    }
+    
+    if (!playwrightResults || Object.keys(playwrightResults).length === 0) {
+        toast('No results to push');
+        return;
+    }
+    
+    const pushBtn = document.getElementById('push-results-btn');
+    if (pushBtn) {
+        pushBtn.disabled = true;
+        pushBtn.textContent = '⏳ Pushing...';
+    }
+    
+    try {
+        const payload = {
+            results: playwrightResults,
+            summary: playwrightSummary,
+            pushedAt: new Date().toISOString(),
+            pushedBy: {
+                uid: currentUser.uid,
+                name: currentUser.displayName,
+                email: currentUser.email
+            },
+            environment: {
+                userAgent: navigator.userAgent,
+                url: window.location.href
+            }
+        };
+        
+        // Save to Firebase under /testplan/playwright-results/latest
+        await db.ref('testplan/playwright-results/latest').set(payload);
+        
+        // Also save to history with timestamp key
+        const historyKey = Date.now();
+        await db.ref(`testplan/playwright-results/history/${historyKey}`).set(payload);
+        
+        showCloudStatus(`✅ Pushed ${Object.keys(playwrightResults).length} results to cloud`);
+        toast('Results pushed to cloud!');
+        
+    } catch (error) {
+        console.error('Push error:', error);
+        showCloudStatus(`❌ Push failed: ${error.message}`, true);
+        toast('Failed to push results');
+    } finally {
+        if (pushBtn) {
+            pushBtn.disabled = false;
+            pushBtn.textContent = '☁️ Push to Cloud';
+        }
+    }
+}
+
+// Auto-pull for GitHub hosted version (silent, no UI)
+async function autoPullPlaywrightResults() {
+    if (!db) {
+        console.log('Firebase not ready, will retry...');
+        setTimeout(autoPullPlaywrightResults, 1000);
+        return;
+    }
+    
+    try {
+        console.log('🤖 Auto-pulling Playwright results from Firebase...');
+        const snapshot = await db.ref('testplan/playwright-results/latest').once('value');
+        const data = snapshot.val();
+        
+        if (!data || !data.results) {
+            console.log('No Playwright results in cloud');
+            return;
+        }
+        
+        // Load the results
+        playwrightResults = data.results;
+        playwrightSummary = data.summary || {
+            total: Object.keys(data.results).length,
+            passed: Object.values(data.results).filter(r => r.status === 'passed').length,
+            failed: Object.values(data.results).filter(r => r.status === 'failed').length,
+            skipped: Object.values(data.results).filter(r => r.status === 'skipped').length,
+            timestamp: data.pushedAt
+        };
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('playwrightResults', JSON.stringify(playwrightResults));
+        localStorage.setItem('playwrightSummary', JSON.stringify(playwrightSummary));
+        
+        // Update badges in test lists
+        renderAutomationTests();
+        
+        const pushedBy = data.pushedBy?.name || 'Unknown';
+        const pushedAt = data.pushedAt ? new Date(data.pushedAt).toLocaleString() : 'Unknown';
+        console.log(`🤖 Loaded ${Object.keys(playwrightResults).length} Playwright results (by ${pushedBy} at ${pushedAt})`);
+        
+    } catch (error) {
+        console.error('Auto-pull error:', error);
+    }
+}
+
+function getPlaywrightStatus(testId) {
+    // Direct match
+    if (playwrightResults[testId]) {
+        return playwrightResults[testId];
+    }
+    
+    // Check ID mapping
+    const mappedId = PLAYWRIGHT_ID_MAP[testId];
+    if (mappedId && playwrightResults[mappedId]) {
+        return playwrightResults[mappedId];
+    }
+    
+    return null;
+}
+
+function getPlaywrightBadge(testId) {
+    const result = getPlaywrightStatus(testId);
+    if (!result) return '';
+    
+    const icon = result.status === 'passed' ? '✅' : 
+                 result.status === 'failed' ? '❌' : 
+                 result.status === 'skipped' ? '⏭️' : '⏱️';
+    const duration = result.duration ? ` (${formatDuration(result.duration)})` : '';
+    const title = `Playwright: ${result.status}${duration}`;
+    
+    return `<span class="pw-badge pw-${result.status}" title="${title}">🤖${icon}</span>`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Load saved Playwright results on startup
+function loadSavedPlaywrightResults() {
+    try {
+        const saved = localStorage.getItem('playwrightResults');
+        const savedSummary = localStorage.getItem('playwrightSummary');
+        if (saved) {
+            playwrightResults = JSON.parse(saved);
+            playwrightSummary = savedSummary ? JSON.parse(savedSummary) : null;
+            updatePlaywrightSummaryUI();
+            updatePushButtonVisibility();
+        }
+    } catch (e) {
+        console.error('Error loading saved Playwright results:', e);
+    }
+}
+
+// ========== EXPORT ==========
+function exportJSON() {
+    const data = {
+        exportedAt: new Date().toISOString(),
+        tester: { uid: currentUser.uid, name: currentUser.displayName, email: currentUser.email },
+        assignment: userAssignment,
+        device: navigator.userAgent,
+        screen: `${innerWidth}x${innerHeight}`,
+        summary: {
+            total: getAssignedTests().length,
+            pass: Object.values(testResults).filter(r => r.status === 'pass').length,
+            fail: Object.values(testResults).filter(r => r.status === 'fail').length,
+            skip: Object.values(testResults).filter(r => r.status === 'skip').length
+        },
+        platformCoverage: [...new Set(Object.values(testResults).map(r => r.platform).filter(Boolean))],
+        failedTests: getAssignedTests().filter(t => testResults[t.id]?.status === 'fail').map(t => ({
+            id: t.id, title: t.title, expected: t.expected,
+            platform: testResults[t.id]?.platform,
+            notes: testResults[t.id]?.notes,
+            screenshots: testResults[t.id]?.screenshots?.length || 0
+        })),
+        results: testResults,
+        consoleLogs: consoleLogs.slice(-200)
+    };
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    toast('JSON copied! Paste to Claude');
+}
+
+function exportCSV() {
+    const rows = [['ID', 'Title', 'Status', 'Platform', 'Notes', 'Screenshots']];
+    getAssignedTests().forEach(t => {
+        const r = testResults[t.id] || {};
+        rows.push([t.id, `"${t.title}"`, r.status || 'pending', r.platform || '', `"${(r.notes || '').replace(/"/g, '""')}"`, (r.screenshots || []).length]);
+    });
+    downloadFile(rows.map(r => r.join(',')).join('\n'), 'test-results.csv', 'text/csv');
+}
+
+function exportMarkdown() {
+    const tests = getAssignedTests();
+    const pass = tests.filter(t => testResults[t.id]?.status === 'pass').length;
+    const fail = tests.filter(t => testResults[t.id]?.status === 'fail').length;
+    const platforms = [...new Set(Object.values(testResults).map(r => r.platform).filter(Boolean))];
+    
+    let md = `# Game Shelf Test Results\n\n`;
+    md += `**Tester:** ${currentUser.displayName}\n`;
+    md += `**Date:** ${new Date().toLocaleString()}\n`;
+    md += `**Summary:** ${pass} pass, ${fail} fail of ${tests.length}\n`;
+    md += `**Platforms Tested:** ${platforms.map(p => getPlatformIcon(p)).join(', ') || 'Not specified'}\n\n`;
+    
+    const failed = tests.filter(t => testResults[t.id]?.status === 'fail');
+    if (failed.length) {
+        md += `## Failed Tests\n\n`;
+        failed.forEach(t => {
+            const r = testResults[t.id];
+            md += `### ${t.id}: ${t.title}\n`;
+            md += `**Platform:** ${r.platform ? getPlatformIcon(r.platform) : 'Not specified'}\n`;
+            md += `**Expected:** ${t.expected}\n`;
+            md += `**Notes:** ${r.notes || 'None'}\n\n`;
+        });
+    }
+    
+    downloadFile(md, 'test-results.md', 'text/markdown');
+}
+
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+}
+
+// ========== UTILS ==========
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('visible');
+    setTimeout(() => t.classList.remove('visible'), 2000);
+}
+
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function getPlatformIcon(platform) {
+    const icons = {
+        'desktop-chrome': '🖥️ Chrome',
+        'desktop-safari': '🖥️ Safari',
+        'desktop-firefox': '🖥️ Firefox',
+        'iphone-safari': '📱 iOS',
+        'iphone-pwa': '📱 iOS PWA',
+        'android-chrome': '🤖 Android',
+        'android-pwa': '🤖 Android PWA',
+        'ipad': '📲 iPad'
+    };
+    return icons[platform] || platform;
+}
+
+function detectPlatform() {
+    const ua = navigator.userAgent;
+    const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (/iPad/.test(ua)) return 'ipad';
+    if (/iPhone|iPod/.test(ua)) return standalone ? 'iphone-pwa' : 'iphone-safari';
+    if (/Android/.test(ua)) return standalone ? 'android-pwa' : 'android-chrome';
+    if (/Firefox/.test(ua)) return 'desktop-firefox';
+    if (/Safari/.test(ua) && !/Chrome/.test(ua)) return 'desktop-safari';
+    return 'desktop-chrome';
+}
+
+function autoDetectPlatform(id) {
+    const platform = detectPlatform();
+    setPlatform(id, platform);
+    toast(`Detected: ${getPlatformIcon(platform)}`);
+}
+
+function changeGlobalPlatform(platform) {
+    detectedPlatform = platform;
+    updatePlatformUI();
+    toast(`Platform set to ${getPlatformIcon(platform)}`);
+}
+
+function updatePlatformUI() {
+    document.getElementById('current-platform').textContent = getPlatformIcon(detectedPlatform);
+    const select = document.getElementById('platform-select');
+    if (select) select.value = detectedPlatform;
+}
+
+// Init
+detectedPlatform = detectPlatform();
+console.log('🧪 Test Plan v3 loaded');
+console.log('📱 Detected platform:', detectedPlatform, getPlatformIcon(detectedPlatform));
+setInterval(updateMetrics, 1000);
+</script>
+</body>
+</html>
