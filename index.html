@@ -1,9 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XRL2SVN0YF"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XRL2SVN0YF');
+    </script>
+    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Shelf Test Plan v3</title>
+    <meta name="version" content="4.0.1">
+    <meta name="gs-app-id" content="testplan">
+    <title>Game Shelf Test Plan v4</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -85,12 +97,6 @@
         .assignment-card h4 { font-size: 0.85rem; }
         .assignment-card p { font-size: 0.7rem; color: var(--gray-500); }
         .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; }
-        
-        /* Playwright result badges */
-        .pw-badge { font-size: 0.65rem; margin-left: 4px; cursor: help; }
-        .pw-badge.pw-passed { color: var(--success); }
-        .pw-badge.pw-failed { color: var(--danger); }
-        .pw-badge.pw-skipped { color: var(--gray-400); }
         
         .progress-bar { height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; margin: 8px 0; }
         .progress-fill { height: 100%; background: var(--success); transition: width 0.3s; }
@@ -268,7 +274,19 @@
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
             .action-buttons { flex-direction: column; }
-            .header-tabs { display: none; }
+            .header-tabs { 
+                display: flex; 
+                overflow-x: auto; 
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 4px;
+                margin: 8px -10px 0 -10px;
+                padding: 0 10px 8px 10px;
+            }
+            .header-tab { 
+                flex-shrink: 0; 
+                font-size: 0.7rem; 
+                padding: 5px 10px;
+            }
         }
         
         /* Dark Mode Toggle */
@@ -352,6 +370,131 @@
         [data-theme="dark"] .search-input { background: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary); }
         [data-theme="dark"] .filter-btn { background: var(--bg-tertiary); color: var(--text-primary); }
         [data-theme="dark"] .filter-btn.active { background: var(--primary); color: white; }
+        
+        /* Issue Reporting Styles */
+        .screenshot-upload { margin-top: 8px; }
+        .screenshot-preview { 
+            border: 2px dashed var(--gray-300); 
+            border-radius: 8px; 
+            min-height: 150px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+            position: relative;
+        }
+        .screenshot-preview:hover { border-color: var(--primary); background: var(--gray-50); }
+        .screenshot-preview.has-image { border-style: solid; border-color: var(--success); }
+        .screenshot-preview img { max-width: 100%; max-height: 300px; object-fit: contain; }
+        .screenshot-placeholder { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 8px; 
+            color: var(--gray-400); 
+            font-size: 0.85rem;
+        }
+        .screenshot-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .issue-card {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--gray-300);
+        }
+        .issue-card.severity-critical { border-left-color: #dc2626; }
+        .issue-card.severity-major { border-left-color: #ea580c; }
+        .issue-card.severity-minor { border-left-color: #ca8a04; }
+        .issue-card.severity-cosmetic { border-left-color: #16a34a; }
+        .issue-card.severity-suggestion { border-left-color: #6366f1; }
+        
+        .issue-card.status-fixed { opacity: 0.7; }
+        .issue-card.status-wont-fix { opacity: 0.5; }
+        
+        .issue-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+        .issue-title { font-weight: 600; font-size: 0.9rem; flex: 1; }
+        .issue-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+        .issue-badge { 
+            padding: 2px 8px; 
+            border-radius: 12px; 
+            font-size: 0.65rem; 
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .issue-badge.severity { background: var(--gray-200); color: var(--gray-700); }
+        .issue-badge.section { background: var(--primary); color: white; }
+        .issue-badge.status-open { background: #dbeafe; color: #1e40af; }
+        .issue-badge.status-in-progress { background: #fef3c7; color: #92400e; }
+        .issue-badge.status-fixed { background: #dcfce7; color: #166534; }
+        .issue-badge.status-wont-fix { background: var(--gray-300); color: var(--gray-700); }
+        
+        .issue-description { font-size: 0.8rem; color: var(--gray-600); margin-bottom: 10px; line-height: 1.5; }
+        .issue-meta { display: flex; gap: 12px; font-size: 0.7rem; color: var(--gray-500); flex-wrap: wrap; align-items: center; }
+        .issue-screenshot-thumb { 
+            width: 60px; 
+            height: 60px; 
+            object-fit: cover; 
+            border-radius: 4px; 
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+        }
+        .issue-actions { display: flex; gap: 6px; margin-top: 10px; }
+        
+        /* Dark mode overrides for issues */
+        [data-theme="dark"] .issue-card { background: var(--bg-tertiary); }
+        [data-theme="dark"] .issue-description { color: var(--text-secondary); }
+        [data-theme="dark"] .issue-meta { color: var(--text-secondary); }
+        [data-theme="dark"] .screenshot-preview { border-color: var(--border-color); }
+        [data-theme="dark"] .screenshot-preview:hover { background: var(--bg-tertiary); }
+        [data-theme="dark"] .screenshot-placeholder { color: var(--text-secondary); }
+        [data-theme="dark"] .issue-badge.severity { background: var(--bg-secondary); color: var(--text-secondary); }
+        
+        /* Issue image modal */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .image-modal.visible { display: flex; }
+        .image-modal img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -594,63 +737,6 @@
                     <button class="btn btn-secondary" onclick="generatePuppeteer()">🎪 Puppeteer Script</button>
                 </div>
             </div>
-            
-            <div class="panel" id="playwright-panel" style="border: 2px solid var(--primary); display: none;">
-                <h3>🤖 Playwright Results</h3>
-                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Run Playwright tests and push results to cloud for the GitHub version.</p>
-                
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
-                    <input type="file" id="playwright-file" accept=".json" style="display: none;" onchange="importPlaywrightFile(event)">
-                    <button class="btn btn-primary" onclick="document.getElementById('playwright-file').click()">📥 Import JSON</button>
-                    <button class="btn btn-success" id="push-results-btn" onclick="pushResultsToCloud()" style="display: none;">☁️ Push to Cloud</button>
-                    <button class="btn btn-secondary" onclick="clearPlaywrightResults()">🗑️ Clear</button>
-                </div>
-                
-                <div id="cloud-status" style="display: none; padding: 8px 12px; background: var(--gray-100); border-radius: 6px; margin-bottom: 12px; font-size: 0.8rem;">
-                    <span id="cloud-status-text"></span>
-                </div>
-                
-                <div id="playwright-summary" style="display: none; padding: 12px; background: var(--gray-50); border-radius: 8px; margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <strong style="font-size: 0.9rem;">Last Import</strong>
-                        <span id="pw-timestamp" style="font-size: 0.75rem; color: var(--gray-500);"></span>
-                    </div>
-                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                        <div style="text-align: center;">
-                            <div id="pw-total" style="font-size: 1.5rem; font-weight: bold;">0</div>
-                            <div style="font-size: 0.7rem; color: var(--gray-500);">Total</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div id="pw-passed" style="font-size: 1.5rem; font-weight: bold; color: var(--success);">0</div>
-                            <div style="font-size: 0.7rem; color: var(--gray-500);">Passed</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div id="pw-failed" style="font-size: 1.5rem; font-weight: bold; color: var(--danger);">0</div>
-                            <div style="font-size: 0.7rem; color: var(--gray-500);">Failed</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div id="pw-skipped" style="font-size: 1.5rem; font-weight: bold; color: var(--gray-400);">0</div>
-                            <div style="font-size: 0.7rem; color: var(--gray-500);">Skipped</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div id="pw-duration" style="font-size: 1.5rem; font-weight: bold;">0s</div>
-                            <div style="font-size: 0.7rem; color: var(--gray-500);">Duration</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="playwright-failures" style="display: none;">
-                    <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--danger);">❌ Failed Tests</div>
-                    <div id="pw-failure-list" style="max-height: 200px; overflow-y: auto;"></div>
-                </div>
-                
-                <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: 12px;">
-                    <strong>Workflow:</strong><br>
-                    1. Run: <code>npx playwright test --reporter=json > results.json</code><br>
-                    2. Click <strong>Import JSON</strong> to load results<br>
-                    3. Click <strong>Push to Cloud</strong> to sync with GitHub version
-                </div>
-            </div>
         </div>
         
         <!-- REPORTS TAB -->
@@ -694,6 +780,167 @@
                 <div id="coverage-matrix" style="overflow-x: auto;"></div>
             </div>
         </div>
+        
+        <!-- ISSUE REPORTING TAB -->
+        <div id="tab-issues" class="hidden">
+            <div class="panel">
+                <h3>🐛 Report an Issue</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 16px;">Found a bug or problem? Report it here. Screenshots help!</p>
+                
+                <form id="issue-form" onsubmit="submitIssue(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>App Section *</label>
+                            <select id="issue-section" required>
+                                <option value="">Select section...</option>
+                                <option value="home">🏠 Home</option>
+                                <option value="games">🎮 Games / Shelf</option>
+                                <option value="social">👥 Social / Friends</option>
+                                <option value="battles">⚔️ Battles</option>
+                                <option value="share">📤 Share</option>
+                                <option value="log">📋 Log Sheet</option>
+                                <option value="settings">⚙️ Settings / Menu</option>
+                                <option value="onboarding">🎯 Setup / Onboarding</option>
+                                <option value="auth">🔐 Login / Account</option>
+                                <option value="achievements">🏆 Achievements</option>
+                                <option value="rewards">🎁 Rewards Shop</option>
+                                <option value="notifications">🔔 Notifications</option>
+                                <option value="other">📱 Other / General</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Severity *</label>
+                            <select id="issue-severity" required>
+                                <option value="">Select severity...</option>
+                                <option value="critical">🔴 Critical - App crash / data loss</option>
+                                <option value="major">🟠 Major - Feature broken</option>
+                                <option value="minor">🟡 Minor - Works but annoying</option>
+                                <option value="cosmetic">🟢 Cosmetic - Visual glitch</option>
+                                <option value="suggestion">💡 Suggestion / Enhancement</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Device / Platform</label>
+                            <select id="issue-platform">
+                                <option value="iphone">📱 iPhone</option>
+                                <option value="ipad">📱 iPad</option>
+                                <option value="android">🤖 Android Phone</option>
+                                <option value="android-tablet">🤖 Android Tablet</option>
+                                <option value="mac">💻 Mac (Safari)</option>
+                                <option value="mac-chrome">💻 Mac (Chrome)</option>
+                                <option value="windows">🖥️ Windows</option>
+                                <option value="other">❓ Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Browser (if applicable)</label>
+                            <input type="text" id="issue-browser" placeholder="e.g., Safari 17, Chrome 120">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full">
+                        <label>Issue Title *</label>
+                        <input type="text" id="issue-title" placeholder="Brief description of the issue" required maxlength="100">
+                    </div>
+                    
+                    <div class="form-group full">
+                        <label>Detailed Description *</label>
+                        <textarea id="issue-description" rows="4" placeholder="What happened? What did you expect to happen?" required></textarea>
+                    </div>
+                    
+                    <div class="form-group full">
+                        <label>Steps to Reproduce (optional)</label>
+                        <textarea id="issue-steps" rows="3" placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."></textarea>
+                    </div>
+                    
+                    <div class="form-group full">
+                        <label>Screenshot</label>
+                        <div class="screenshot-upload" id="screenshot-upload">
+                            <input type="file" id="issue-screenshot" accept="image/*" onchange="handleScreenshotSelect(event)" style="display: none;">
+                            <div class="screenshot-preview" id="screenshot-preview" onclick="document.getElementById('issue-screenshot').click()">
+                                <div class="screenshot-placeholder">
+                                    <span style="font-size: 2rem;">📷</span>
+                                    <span>Click to add screenshot</span>
+                                    <span style="font-size: 0.7rem; color: var(--gray-400);">or paste from clipboard</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button type="submit" class="btn btn-primary" id="submit-issue-btn">
+                            🐛 Submit Issue
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearIssueForm()">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="panel">
+                <h3>📋 Recent Issues</h3>
+                <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">Issues reported by all testers.</p>
+                
+                <details style="font-size: 0.75rem; color: var(--gray-400); margin-bottom: 12px; background: var(--card-bg); padding: 8px; border-radius: 6px; border: 1px solid var(--gray-200);">
+                    <summary style="cursor: pointer;">⚙️ Firebase Setup Required</summary>
+                    <div style="margin-top: 8px;">
+                        <p>Add these rules to Firebase Realtime Database:</p>
+                        <pre style="background: #1a1a2e; color: #00ff00; padding: 8px; border-radius: 4px; font-size: 0.7rem; overflow-x: auto;">
+"reported-issues": {
+  ".read": "auth != null",
+  ".write": "auth != null"
+}</pre>
+                    </div>
+                </details>
+                
+                <div class="issue-filters" style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <select id="filter-type" onchange="filterIssues()" style="padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem;">
+                        <option value="all">All Types</option>
+                        <option value="bug">🐛 Bug</option>
+                        <option value="enhancement">✨ Enhancement</option>
+                        <option value="feature">💡 Feature</option>
+                        <option value="question">❓ Question</option>
+                    </select>
+                    <select id="filter-status" onchange="filterIssues()" style="padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem;">
+                        <option value="all">All Status</option>
+                        <option value="open">🔵 Open</option>
+                        <option value="triaged">📋 Triaged</option>
+                        <option value="in-progress">🟡 In Progress</option>
+                        <option value="in-review">🔍 In Review</option>
+                        <option value="resolved">🟢 Resolved</option>
+                        <option value="closed">⚫ Closed</option>
+                        <option value="wont-fix">🚫 Won't Fix</option>
+                        <option value="duplicate">📎 Duplicate</option>
+                    </select>
+                    <select id="filter-priority" onchange="filterIssues()" style="padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem;">
+                        <option value="all">All Priority</option>
+                        <option value="p0">🔴 P0 - Critical</option>
+                        <option value="p1">🟠 P1 - High</option>
+                        <option value="p2">🟡 P2 - Medium</option>
+                        <option value="p3">🟢 P3 - Low</option>
+                        <option value="p4">⚪ P4 - Backlog</option>
+                        <option value="none">❓ Unassigned</option>
+                    </select>
+                    <select id="filter-severity" onchange="filterIssues()" style="padding: 6px 10px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 0.8rem;">
+                        <option value="all">All Severity</option>
+                        <option value="critical">🔴 Critical</option>
+                        <option value="major">🟠 Major</option>
+                        <option value="minor">🟡 Minor</option>
+                        <option value="cosmetic">🟢 Cosmetic</option>
+                        <option value="suggestion">💡 Suggestion</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" onclick="loadIssues()">🔄 Refresh</button>
+                </div>
+                
+                <div id="issues-list">
+                    <div style="text-align: center; padding: 20px; color: var(--gray-500);">Loading issues...</div>
+                </div>
+            </div>
+        </div>
     </main>
     
     <button class="debug-fab" id="debug-fab" onclick="toggleDebugPanel()">🐛</button>
@@ -727,383 +974,98 @@ const db = firebase.database();
 const GAMESHELF_URL = 'https://stewartdavidp-ship-it.github.io/gameshelftest/';
 const ADMIN_EMAILS = ['stewartdavidp@gmail.com'];
 
+
 // ========== TEST DATA ==========
+// Lean Test Suite - 60 tests designed to find REAL BUGS
 const TEST_SECTIONS = [
-    // ========== ONBOARDING (A1-A8) ==========
-    { id: 'onboarding', name: 'Onboarding', icon: '👋', tests: [
-        { id: 'A1', title: 'Welcome screen shows for new user', expected: 'Welcome visible', steps: '1. Fresh load\n2. Check welcome', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'A2', title: 'Can proceed past welcome screen', expected: 'Next screen shows', steps: '1. Click Lets Go\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'A3', title: 'Can select games during onboarding', expected: 'Games selectable', steps: '1. Select 3 games\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'A4', title: 'Game selection screen has next button', expected: 'Button visible', steps: '1. Check Next button', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'A5', title: 'Can complete full onboarding flow', expected: 'Home screen', steps: '1. Complete all steps\n2. See home', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'A7', title: 'Can skip optional steps', expected: 'Skip works', steps: '1. Click skip\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'A8', title: 'Onboarding state persists on reload', expected: 'State kept', steps: '1. Reload\n2. Check state', launch: '', note: 'Playwright' }
+    // ========== E: PARSER EDGE CASES (E1-E20) ==========
+    { id: 'parser-edge', name: 'Parser Edge Cases', icon: '🎯', tests: [
+        { id: 'E1', title: 'Wordle with comma in puzzle number', expected: 'Parsed correctly', steps: 'Paste: Wordle 1,234 3/6', launch: '#log', note: 'Lean Test' },
+        { id: 'E2', title: 'Wordle with period in puzzle number (EU)', expected: 'Handled gracefully', steps: 'Paste: Wordle 1.234 3/6', launch: '#log', note: 'Lean Test' },
+        { id: 'E3', title: 'Wordle X/6 loss detection', expected: 'Loss detected', steps: 'Paste: Wordle X/6 result', launch: '#log', note: 'Lean Test' },
+        { id: 'E4', title: 'Wordle lowercase input', expected: 'Case insensitive', steps: 'Paste: wordle 100 4/6', launch: '#log', note: 'Lean Test' },
+        { id: 'E5', title: 'Wordle with extra whitespace', expected: 'Trimmed & parsed', steps: 'Paste with leading/trailing spaces', launch: '#log', note: 'Lean Test' },
+        { id: 'E6', title: 'Wordle 1/6 ace detection', expected: 'Ace detected', steps: 'Paste: Wordle 1/6', launch: '#log', note: 'Lean Test' },
+        { id: 'E7', title: 'Connections standard format', expected: 'Parsed', steps: 'Paste standard Connections', launch: '#log', note: 'Lean Test' },
+        { id: 'E8', title: 'Connections with mistakes', expected: 'Mistakes counted', steps: 'Paste Connections with errors', launch: '#log', note: 'Lean Test' },
+        { id: 'E9', title: 'Connections without puzzle number', expected: 'Still parsed', steps: 'Paste without #number', launch: '#log', note: 'Lean Test' },
+        { id: 'E10', title: 'Mini Crossword under 1 minute', expected: 'Time parsed', steps: 'Paste 0:45 result', launch: '#log', note: 'Lean Test' },
+        { id: 'E11', title: 'Mini Crossword over 1 minute', expected: 'Time parsed', steps: 'Paste 1:23 result', launch: '#log', note: 'Lean Test' },
+        { id: 'E12', title: 'Mini Crossword over 10 minutes', expected: 'Time parsed', steps: 'Paste 12:05 result', launch: '#log', note: 'Lean Test' },
+        { id: 'E13', title: 'Strands with hints used', expected: 'Hints counted', steps: 'Paste with 💡', launch: '#log', note: 'Lean Test' },
+        { id: 'E14', title: 'Strands perfect game no hints', expected: 'Perfect detected', steps: 'Paste without hints', launch: '#log', note: 'Lean Test' },
+        { id: 'E15', title: 'Empty input returns no detection', expected: 'No false positive', steps: 'Submit empty', launch: '#log', note: 'Lean Test' },
+        { id: 'E16', title: 'Random text not detected as game', expected: 'No false positive', steps: 'Paste random text', launch: '#log', note: 'Lean Test' },
+        { id: 'E17', title: 'Partial Wordle not detected', expected: 'No partial match', steps: 'Paste: Wordle only', launch: '#log', note: 'Lean Test' },
+        { id: 'E18', title: 'Future puzzle number handled', expected: 'Accepted or rejected gracefully', steps: 'Paste: Wordle 99999', launch: '#log', note: 'Lean Test' },
+        { id: 'E19', title: 'Unicode emoji variants handled', expected: 'All emoji parsed', steps: 'Paste various emoji', launch: '#log', note: 'Lean Test' },
+        { id: 'E20', title: 'Multiple games in one paste', expected: 'First or all detected', steps: 'Paste 2 games', launch: '#log', note: 'Lean Test' }
     ]},
     
-    // ========== TRACKING (T1-T8) ==========
-    { id: 'tracking', name: 'Tracking', icon: '📋', tests: [
-        { id: 'T1', title: 'Log sheet opens via hash', expected: 'Sheet opens', steps: '1. Go to #log\n2. Verify sheet', launch: '#log', note: 'Playwright' },
-        { id: 'T2', title: 'Can type in log input', expected: 'Text appears', steps: '1. Open log\n2. Type text', launch: '#log', note: 'Playwright' },
-        { id: 'T3', title: 'Wordle result detected', expected: 'Game detected', steps: '1. Paste Wordle\n2. Check detection', launch: '#log', note: 'Playwright' },
-        { id: 'T4', title: 'Connections result can be pasted', expected: 'Game detected', steps: '1. Paste Connections\n2. Check', launch: '#log', note: 'Playwright' },
-        { id: 'T5', title: 'Home tab shows game cards', expected: 'Cards visible', steps: '1. Go home\n2. Check cards', launch: '#home', note: 'Playwright' },
-        { id: 'T6', title: 'Games tab accessible', expected: 'Tab opens', steps: '1. Click Games\n2. Verify', launch: '#games', note: 'Playwright' },
-        { id: 'T7', title: 'Social tab accessible', expected: 'Tab opens', steps: '1. Click Social\n2. Verify', launch: '#social', note: 'Playwright' },
-        { id: 'T8', title: 'Share tab accessible', expected: 'Tab opens', steps: '1. Click Share\n2. Verify', launch: '#share', note: 'Playwright' }
+    // ========== K: DATA CORRUPTION (K1-K10) ==========
+    { id: 'data-corruption', name: 'Data Corruption', icon: '💾', tests: [
+        { id: 'K1', title: 'Corrupted localStorage handled', expected: 'App loads with defaults', steps: 'Set invalid JSON in localStorage', launch: '', note: 'Lean Test' },
+        { id: 'K2', title: 'Missing required fields handled', expected: 'Defaults applied', steps: 'Remove games array from data', launch: '', note: 'Lean Test' },
+        { id: 'K3', title: 'Null values in history handled', expected: 'No crash', steps: 'Set history[date]=null', launch: '', note: 'Lean Test' },
+        { id: 'K4', title: 'Future dates in history handled', expected: 'Displayed or filtered', steps: 'Add future date entry', launch: '', note: 'Lean Test' },
+        { id: 'K5', title: 'Negative token balance handled', expected: 'Reset or shown correctly', steps: 'Set tokens=-100', launch: '', note: 'Lean Test' },
+        { id: 'K6', title: 'Invalid game ID in games array', expected: 'Filtered out', steps: 'Add fake_game to array', launch: '', note: 'Lean Test' },
+        { id: 'K7', title: 'Extremely long username handled', expected: 'Truncated in UI', steps: 'Set 1000 char name', launch: '', note: 'Lean Test' },
+        { id: 'K8', title: 'Special chars in username handled', expected: 'Escaped or rejected', steps: 'XSS attempt in name', launch: '', note: 'Lean Test' },
+        { id: 'K9', title: 'Duplicate dates in history handled', expected: 'Latest wins or merged', steps: 'Add duplicate date entries', launch: '', note: 'Lean Test' },
+        { id: 'K10', title: 'Version mismatch in data handled', expected: 'Migrated correctly', steps: 'Load old version data', launch: '', note: 'Lean Test' }
     ]},
     
-    // ========== CLIPBOARD (C1-C18) ==========
-    { id: 'clipboard', name: 'Clipboard', icon: '📎', tests: [
-        { id: 'C1', title: 'Clipboard monitor starts after launch', expected: 'Monitor active', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'C2', title: 'Clipboard check function exists', expected: 'Function defined', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C3', title: 'Wordle result detected from clipboard', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C4', title: 'Connections result detected', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C5', title: 'Strands result detected', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C6', title: 'Mini Crossword time detected', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C7', title: 'Invalid text not detected', expected: 'No detection', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C8', title: 'Log sheet has input field', expected: 'Input visible', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C9', title: 'Pasting Wordle triggers detection', expected: 'Detected', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C10', title: 'Multiple results handled', expected: 'Handled', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C11', title: 'Clipboard permission denied handled', expected: 'No crash', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C12', title: 'Works without clipboard API', expected: 'Fallback works', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C13', title: 'Visibility change triggers check', expected: 'Check runs', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C14', title: 'Detected result shows prompt', expected: 'Prompt shown', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'C15', title: 'Handles Wordle with comma', expected: 'Parsed correctly', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C16', title: 'Handles Wordle without comma', expected: 'Parsed correctly', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C17', title: 'Handles varied spacing', expected: 'Parsed correctly', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'C18', title: 'Case insensitive matching', expected: 'Matched', steps: 'Automated', launch: '', note: 'Playwright' }
+    // ========== L: BOUNDARY CONDITIONS (L1-L10) ==========
+    { id: 'boundaries', name: 'Boundary Conditions', icon: '📏', tests: [
+        { id: 'L1', title: 'Zero games selected state', expected: 'Handled gracefully', steps: 'Remove all games from selection', launch: '', note: 'Lean Test' },
+        { id: 'L2', title: 'Maximum games selected', expected: 'All games display', steps: 'Add all available games', launch: '', note: 'Lean Test' },
+        { id: 'L3', title: 'First day streak calculation', expected: 'Streak = 1', steps: 'New user logs first game', launch: '', note: 'Lean Test' },
+        { id: 'L4', title: '365 day history performance', expected: 'Loads in <2s', steps: 'Load full year of data', launch: '', note: 'Lean Test' },
+        { id: 'L5', title: 'Token balance at MAX_SAFE_INTEGER', expected: 'Displays correctly', steps: 'Set tokens to max value', launch: '', note: 'Lean Test' },
+        { id: 'L6', title: 'Empty history display', expected: 'Shows empty state', steps: 'Clear all history', launch: '', note: 'Lean Test' },
+        { id: 'L7', title: 'Single character input', expected: 'No crash', steps: 'Type single char "a"', launch: '#log', note: 'Lean Test' },
+        { id: 'L8', title: 'Exactly max length input', expected: 'Accepted', steps: 'Paste at character limit', launch: '#log', note: 'Lean Test' },
+        { id: 'L9', title: 'Date boundary at midnight', expected: 'Correct day assigned', steps: 'Log at 00:00:00', launch: '', note: 'Lean Test' },
+        { id: 'L10', title: 'Leap year Feb 29 handling', expected: 'Valid date accepted', steps: 'Log on Feb 29 leap year', launch: '', note: 'Lean Test' }
     ]},
     
-    // ========== DATA INTEGRITY (D1-D23) ==========
-    { id: 'data', name: 'Data Integrity', icon: '💾', tests: [
-        { id: 'D1', title: 'Streak starts at 1 for first game', expected: 'Streak = 1', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D2', title: 'Streak increments for consecutive days', expected: 'Increments', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D3', title: 'Streak resets after 1 missed day', expected: 'Resets', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D4', title: 'Streak resets after multiple missed', expected: 'Resets', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D5', title: 'Max streak never decreases', expected: 'Never decreases', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D6', title: 'Max streak updates when exceeded', expected: 'Updates', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D7', title: 'Game at 11:59 PM counts for today', expected: 'Counts today', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D8', title: 'Game at 12:01 AM counts for new day', expected: 'New day', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D9', title: 'History preserves all results', expected: 'Preserved', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D10', title: 'History survives page reload', expected: 'Survives', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D11', title: 'History survives back/forward', expected: 'Survives', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D12', title: 'Multiple games per day stored', expected: 'All stored', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D13', title: 'Old format data is readable', expected: 'Readable', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D14', title: 'Missing fields dont crash app', expected: 'No crash', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D15', title: 'Corrupted JSON is handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D16', title: 'Empty localStorage starts fresh', expected: 'Fresh start', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D17', title: 'Tokens cannot go negative', expected: 'Never negative', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D18', title: 'Large token amounts stored', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D19', title: 'Win rate calculated correctly', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D20', title: 'Stats with zero games no divide by zero', expected: 'No error', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D21', title: 'Referral code persists', expected: 'Persists', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D22', title: 'Referral counts increment', expected: 'Increments', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'D23', title: 'Data structure is JSON serializable', expected: 'Serializable', steps: 'Automated', launch: '', note: 'Playwright' }
+    // ========== M: RACE CONDITIONS (M1-M5) ==========
+    { id: 'race-conditions', name: 'Race Conditions', icon: '🏃', tests: [
+        { id: 'M1', title: 'Rapid tab switching', expected: 'No crash or freeze', steps: 'Switch tabs 20x rapidly', launch: '', note: 'Lean Test' },
+        { id: 'M2', title: 'Double-submit prevention', expected: 'Single entry created', steps: 'Click save button twice fast', launch: '#log', note: 'Lean Test' },
+        { id: 'M3', title: 'Reload during save', expected: 'Data intact or clean', steps: 'Reload mid-save operation', launch: '', note: 'Lean Test' },
+        { id: 'M4', title: 'Multiple paste events', expected: 'Latest paste wins', steps: 'Paste 3 results quickly', launch: '#log', note: 'Lean Test' },
+        { id: 'M5', title: 'Concurrent localStorage access', expected: 'No data corruption', steps: 'Open 2 tabs, save in both', launch: '', note: 'Lean Test' }
     ]},
     
-    // ========== GAME LAUNCH (G1-G11) ==========
-    { id: 'games', name: 'Game Launch', icon: '🎮', tests: [
-        { id: 'G1', title: 'Game cards render on home tab', expected: 'Cards render', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'G2', title: 'Game card shows name and icon', expected: 'Name/icon shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'G3', title: 'Logged game shows checkmark', expected: 'Checkmark shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'G4', title: 'Clicking game card triggers launch', expected: 'Launches', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'G5', title: 'Clicking logged game shows toast', expected: 'Toast shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'G6', title: 'Game launch URL is correct', expected: 'URL correct', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'G7', title: 'App tracks last launched game', expected: 'Tracked', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'G8', title: 'Visibility change triggers check', expected: 'Check runs', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'G9', title: 'Desktop uses browser launch', expected: 'Browser launch', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'G10', title: 'Games tab shows all games', expected: 'All shown', steps: 'Automated', launch: '#games', note: 'Playwright' },
-        { id: 'G11', title: 'Can add new game from browse', expected: 'Can add', steps: 'Automated', launch: '#games', note: 'Playwright' }
+    // ========== N: CRITICAL FLOWS (N1-N5) ==========
+    { id: 'critical-flows', name: 'Critical Flows', icon: '🚦', tests: [
+        { id: 'N1', title: 'Fresh user to first log complete', expected: 'Full flow works', steps: '1. Fresh load\n2. Complete onboarding\n3. Log first game', launch: '?fresh=1', note: 'Lean Test' },
+        { id: 'N2', title: 'Returning user quick log', expected: 'Direct to log sheet', steps: 'Navigate to #log', launch: '#log', note: 'Lean Test' },
+        { id: 'N3', title: 'Data persists across sessions', expected: 'Data restored', steps: 'Log game, reload, verify', launch: '', note: 'Lean Test' },
+        { id: 'N4', title: 'Theme persists across sessions', expected: 'Theme kept', steps: 'Toggle theme, reload, verify', launch: '', note: 'Lean Test' },
+        { id: 'N5', title: 'Deep link to specific tab', expected: 'Correct tab shown', steps: 'Test #home, #games, #log, #share', launch: '', note: 'Lean Test' }
     ]},
     
-    // ========== DEEP LINKS (H1-H6) ==========
-    { id: 'deeplinks', name: 'Deep Links', icon: '🔗', tests: [
-        { id: 'H1', title: '#log opens log sheet', expected: 'Sheet opens', steps: '1. Go to #log\n2. Verify', launch: '#log', note: 'Playwright' },
-        { id: 'H2', title: '#home switches to home tab', expected: 'Tab switches', steps: '1. Go to #home\n2. Verify', launch: '#home', note: 'Playwright' },
-        { id: 'H3', title: '?fresh=1 clears state', expected: 'State cleared', steps: '1. Add ?fresh=1\n2. Verify', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'H4', title: 'seedData parameter works', expected: 'Data seeded', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'H5', title: 'Unknown hash handled gracefully', expected: 'No crash', steps: '1. Go to #invalid\n2. Verify', launch: '#invalid', note: 'Playwright' },
-        { id: 'H6', title: 'Deep links redirect to onboarding', expected: 'Redirects', steps: 'Automated', launch: '', note: 'Playwright' }
+    // ========== Q: SECURITY (Q1-Q5) ==========
+    { id: 'security', name: 'Security', icon: '🔒', tests: [
+        { id: 'Q1', title: 'XSS via paste input', expected: 'Script escaped', steps: 'Paste script tag with alert', launch: '#log', note: 'Lean Test' },
+        { id: 'Q2', title: 'XSS via URL hash', expected: 'Script not executed', steps: 'Navigate to hash with script tag', launch: '', note: 'Lean Test' },
+        { id: 'Q3', title: 'XSS via referral code', expected: 'Script escaped', steps: 'Open URL with script in ref param', launch: '', note: 'Lean Test' },
+        { id: 'Q4', title: 'Path traversal attempt', expected: 'Blocked', steps: 'Open ?ref=../../../etc/passwd', launch: '', note: 'Lean Test' },
+        { id: 'Q5', title: 'Extremely long input handling', expected: 'No crash or hang', steps: 'Paste 100KB of text', launch: '#log', note: 'Lean Test' }
     ]},
     
-    // ========== USER JOURNEYS (J1-J16) ==========
-    { id: 'journeys', name: 'User Journeys', icon: '🚶', tests: [
-        { id: 'J1', title: 'Fresh user sees onboarding', expected: 'Onboarding shown', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'J2', title: 'User can complete onboarding', expected: 'Completed', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'J3', title: 'User launches game and returns', expected: 'Returns to log', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J4', title: 'User pastes Wordle result', expected: 'Logged', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'J5', title: 'Logged game shows checkmark', expected: 'Checkmark shown', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'J6', title: 'Cannot log same game twice', expected: 'Blocked', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J7', title: 'New streak starts at 1', expected: 'Streak = 1', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J8', title: 'Streak increments consecutive days', expected: 'Increments', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J9', title: 'Streak resets after missing day', expected: 'Resets', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J10', title: 'Max streak preserved on reset', expected: 'Preserved', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J11', title: 'User can log multiple games', expected: 'All logged', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J12', title: 'All games complete shows celebration', expected: 'Celebration', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J13', title: 'User earns tokens for logging', expected: 'Tokens earned', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J14', title: 'Token balance displays correctly', expected: 'Correct balance', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'J15', title: 'User can navigate to share tab', expected: 'Navigates', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'J16', title: 'Share includes todays results', expected: 'Results shown', steps: 'Automated', launch: '#share', note: 'Playwright' }
-    ]},
-    
-    // ========== PLATFORM (P1-P14) ==========
-    { id: 'platform', name: 'Platform/PWA', icon: '📱', tests: [
-        { id: 'P1', title: 'Service worker is registered', expected: 'Registered', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P2', title: 'Manifest is present', expected: 'Present', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P3', title: 'App has proper PWA meta tags', expected: 'Tags present', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P4', title: 'App detects browser mode', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P5', title: 'App can detect iOS Safari', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P10', title: 'Bottom sheet can be swiped', expected: 'Swipeable', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P11', title: 'App handles offline gracefully', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P12', title: 'Local data persists offline', expected: 'Persists', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P13', title: 'Core functionality works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'P14', title: 'LocalStorage works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== REGRESSION (R1-R21) ==========
-    { id: 'regression', name: 'Regression', icon: '🔄', tests: [
-        { id: 'R1', title: 'Connections emoji line length 8', expected: 'Length correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R2', title: 'Connections parser uses {8}', expected: 'Correct regex', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R3', title: 'Perfect Connections detected', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R4', title: 'Connections with mistakes detected', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R5', title: 'App uses gameShelfData key', expected: 'Correct key', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R6', title: 'App reads from gameShelfData', expected: 'Reads correctly', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R7', title: 'Referral code in sessionStorage', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R8', title: 'Install banner can be dismissed', expected: 'Dismissible', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R9', title: 'Elements clickable after dismiss', expected: 'Clickable', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R10', title: 'Games grid has unique ID', expected: 'Unique ID', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R11', title: 'Log input has unique ID', expected: 'Unique ID', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R12', title: 'NaN prevention in stats', expected: 'No NaN', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R13', title: 'Infinity prevention in calcs', expected: 'No Infinity', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R14', title: 'Undefined prevention in text', expected: 'No undefined', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R15', title: 'Date formatting edge cases', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R16', title: 'Large numbers display correctly', expected: 'Displayed', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R17', title: 'Empty string inputs handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R18', title: 'Special characters in input', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R19', title: 'Page loads under 5 seconds', expected: 'Fast load', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R20', title: 'Tab switching is instant', expected: 'Instant', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'R21', title: 'LocalStorage operations fast', expected: 'Fast', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== SOCIAL/REFERRAL (S1-S7, REF1-REF2) ==========
-    { id: 'social', name: 'Social/Referral', icon: '👥', tests: [
-        { id: 'S1', title: 'Referral code is generated', expected: 'Generated', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'S2', title: 'Referral link format correct', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'S3', title: 'Referral link can be copied', expected: 'Copyable', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'S4', title: 'Profile link format correct', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'S5', title: 'Friend code input accepts valid', expected: 'Accepts', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'S6', title: 'Referral URL parameter detected', expected: 'Detected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'S7', title: 'Profile URL opens profile view', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'REF1', title: 'Referral sheet opens', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'REF2', title: 'Referral stats display', expected: 'Displayed', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== EXTERNAL SHARE (X1-X5) ==========
-    { id: 'external', name: 'External Share', icon: '🔗', tests: [
-        { id: 'X1', title: 'Twitter share URL format correct', expected: 'Correct URL', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'X2', title: 'Share text is URL-encoded', expected: 'Encoded', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'X3', title: 'Share includes app link', expected: 'Link included', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'X4', title: 'SMS share opens messaging', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'X5', title: 'Email share has correct format', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== URL HANDLING (URL1-URL20) ==========
-    { id: 'urls', name: 'URL Handling', icon: '🌐', tests: [
-        { id: 'URL1', title: 'Referral code is 8 characters', expected: '8 chars', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL2', title: 'Referral code uses valid chars', expected: 'Valid chars', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL3', title: 'getReferralLink returns correct', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL4', title: 'Profile link uses #profile=', expected: 'Correct format', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL5', title: '#ref= parameter extracted', expected: 'Extracted', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL6', title: 'Referral stored in sessionStorage', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL7', title: '#profile= opens profile', expected: 'Opens', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL8', title: '#battle= is extracted', expected: 'Extracted', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL9', title: 'Invalid code length (7) rejected', expected: 'Rejected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL10', title: 'Invalid code length (9) rejected', expected: 'Rejected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL11', title: 'Self-referral is blocked', expected: 'Blocked', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL12', title: 'Multiple hash params handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL13', title: 'Case handling lowercase to upper', expected: 'Converted', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL14', title: 'URL cleaned after processing', expected: 'Cleaned', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL15', title: 'Empty ref param handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL16', title: 'Special characters handled', expected: 'Handled', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL17', title: 'Copy referral link works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL18', title: 'Share referral shows correct URL', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL19', title: 'Battle join URL triggers lookup', expected: 'Triggers', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'URL20', title: 'Battle code is 6 characters', expected: '6 chars', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== SMOKE (SM1-SM9) ==========
-    { id: 'smoke', name: 'Smoke Tests', icon: '💨', tests: [
-        { id: 'SM1', title: 'Welcome screen shows for new user', expected: 'Shows', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'SM2', title: 'Complete onboarding flow', expected: 'Completes', steps: 'Automated', launch: '?fresh=1', note: 'Playwright' },
-        { id: 'SM3', title: 'Home tab displays correctly', expected: 'Displays', steps: 'Automated', launch: '#home', note: 'Playwright' },
-        { id: 'SM4', title: 'Log sheet opens', expected: 'Opens', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'SM5', title: 'Tab navigation works', expected: 'Works', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'SM6', title: 'Invalid hash handled gracefully', expected: 'Handled', steps: 'Automated', launch: '#invalid', note: 'Playwright' },
-        { id: 'SM8', title: 'App loads on mobile viewport', expected: 'Loads', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'SM9', title: 'Menu opens via hash', expected: 'Opens', steps: 'Automated', launch: '#menu', note: 'Playwright' }
-    ]},
-    
-    // ========== BATTLES (B1-B60) ==========
-    { id: 'battles', name: 'Battles', icon: '⚔️', tests: [
-        { id: 'B1', title: 'Battle requires at least one game', expected: 'Validation', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B2', title: 'Battle generates unique join code', expected: 'Generated', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B3', title: 'Entry fee validation', expected: 'Validated', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B4', title: 'Battle duration options valid', expected: 'Valid', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B5', title: 'Wordle scores calculated correctly', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B6', title: 'Connections perfect bonus applied', expected: 'Applied', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B7', title: 'Scores accumulate across days', expected: 'Accumulated', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B8', title: 'Score not counted if not in battle', expected: 'Not counted', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B9', title: 'Win increments only for won games', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B10', title: 'Failed Wordle not counted as win', expected: 'Not counted', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B11', title: 'Wordle 1/6 is perfect', expected: 'Perfect', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B12', title: 'Connections no mistakes is perfect', expected: 'Perfect', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B13', title: 'Strands no hints is perfect', expected: 'Perfect', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B14', title: 'Join code must be valid format', expected: 'Validated', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B15', title: 'Cannot join own battle twice', expected: 'Blocked', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B16', title: 'Entry fee deducted on join', expected: 'Deducted', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B17', title: 'Prize pool increases with joins', expected: 'Increases', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B18', title: 'Cannot join expired battle', expected: 'Blocked', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B19', title: 'Highest score wins total-score', expected: 'Winner', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B20', title: 'Most wins wins win-count mode', expected: 'Winner', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B21', title: 'Tiebreaker - most days played', expected: 'Broken', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B22', title: 'Tiebreaker - most perfects', expected: 'Broken', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B23', title: 'Complete tie handled gracefully', expected: 'Handled', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B24', title: 'Single participant battle', expected: 'Works', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B25', title: 'Zero score participant', expected: 'Handled', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B26', title: 'Battle with all zero scores', expected: 'Handled', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B27', title: 'Battle ending at midnight', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B28', title: 'Very long battle (30 days)', expected: 'Works', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B29', title: 'Large participant count', expected: 'Scales', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B30', title: 'Active to Ended when expires', expected: 'Transitions', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B31', title: 'Pending to Active at start', expected: 'Transitions', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B32', title: 'Cannot modify ended battle', expected: 'Blocked', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B33', title: 'Winner gets 80% of prize', expected: 'Correct', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B34', title: 'Free battle has no prize', expected: 'Zero', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B35', title: 'Prize increases with participants', expected: 'Increases', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B36', title: 'Runner-up prize with 3+ players', expected: 'Given', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B37', title: 'Battle impact shows when logging', expected: 'Shows', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'B38', title: 'Battle impact shows position', expected: 'Shows', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'B39', title: 'Battle impact shows gap to leader', expected: 'Shows', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'B40', title: 'Battle impact hidden when none', expected: 'Hidden', steps: 'Automated', launch: '#log', note: 'Playwright' },
-        { id: 'B41', title: 'Results modal exists', expected: 'Exists', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B42', title: 'Winner sees VICTORY title', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B43', title: 'Non-winner sees message', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B44', title: 'Prize display for winners', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B45', title: 'Standings list renders', expected: 'Renders', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B46', title: 'Tips section for non-winners', expected: 'Shown', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B47', title: 'Share button present', expected: 'Present', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B48', title: 'Rematch button present', expected: 'Present', steps: 'Automated', launch: '#social', note: 'Playwright' },
-        { id: 'B49', title: 'shareBattleProgress exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B50', title: 'shareBattleResult exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B51', title: 'getOrdinalSuffix correct', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B52', title: 'Battle progress message format', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B53', title: 'Victory share message format', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B54', title: 'countPerfects returns string', expected: 'String', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B55', title: 'countGamesPlayed returns fraction', expected: 'Fraction', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B56', title: 'getDurationDays calculates', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B57', title: 'generateBattleTips returns array', expected: 'Array', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B58', title: 'updateBattleImpact exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B59', title: 'showBattleResultsModal exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'B60', title: 'closeBattleResults exists', expected: 'Exists', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== BATTLE SCORING (BT1-BT13) ==========
-    { id: 'scoring', name: 'Battle Scoring', icon: '🎯', tests: [
-        { id: 'BT1', title: 'Wordle score parsing - standard', expected: 'Parsed', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT2', title: 'Wordle score parsing - failed', expected: 'X/6 detected', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT3', title: 'Connections parsing - perfect', expected: 'Perfect', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT4', title: 'Mini Crossword time parsing', expected: 'Parsed', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT5', title: 'Strands hints counting', expected: 'Counted', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT6', title: 'Total Score - points calc', expected: 'Correct', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT7', title: 'Wins battle - only wins count', expected: 'Counted', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT8', title: 'Perfect Hunter - only perfects', expected: 'Counted', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT9', title: 'Streak Challenge - daily bonus', expected: 'Applied', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT10', title: 'Result includes required fields', expected: 'Present', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT11', title: 'Results stored in history', expected: 'Stored', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT12', title: 'Battle rules are generated', expected: 'Generated', steps: 'Automated', launch: '', note: 'Playwright' },
-        { id: 'BT13', title: 'Battle types are available', expected: 'Available', steps: 'Automated', launch: '', note: 'Playwright' }
-    ]},
-    
-    // ========== SHARE HUB (SH1-SH43) ==========
-    { id: 'sharehub', name: 'Share Hub', icon: '📤', tests: [
-        { id: 'SH1', title: 'Default message includes referral', expected: 'Included', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH2', title: 'Referral checkbox toggles link', expected: 'Toggles', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH3', title: 'Minimal template excludes link', expected: 'Excluded', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH4', title: 'Referral link correct URL', expected: 'Correct', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH5', title: 'All templates include link', expected: 'Included', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH6', title: 'Share history section exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH7', title: 'Copy saves to history', expected: 'Saves', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH8', title: 'History displays after saving', expected: 'Displays', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH9', title: 'History can expand/collapse', expected: 'Toggles', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH10', title: 'History items show platform icon', expected: 'Shown', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH11', title: 'History items are clickable', expected: 'Clickable', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH12', title: 'History limits to 20', expected: 'Limited', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH13', title: 'History dropdown opens section', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH14', title: 'Twitter share correct URL', expected: 'Correct', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH15', title: 'All share buttons save history', expected: 'Saves', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH16', title: 'Default template shows results', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH17', title: 'Brag template celebratory', expected: 'Celebratory', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH18', title: 'Challenge template competitive', expected: 'Competitive', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH19', title: 'Streak template shows streak', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH20', title: 'Emoji bar inserts emoji', expected: 'Inserts', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH21', title: 'Share tab shows results', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH22', title: 'Share tab shows current date', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH23', title: 'Quick share button exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH24', title: 'All share buttons visible', expected: 'Visible', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH25', title: 'Template dropdown has optgroups', expected: 'Has optgroups', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH26', title: 'Save as Template option exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH27', title: 'Manage Templates option exists', expected: 'Exists', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH28', title: 'Save Template modal opens', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH29', title: 'Save modal shows message', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH30', title: 'Can save custom template', expected: 'Saves', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH31', title: 'Custom template in dropdown', expected: 'Appears', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH32', title: 'Manage Templates sheet opens', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH33', title: 'Manage shows empty state', expected: 'Shows', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH34', title: 'Manage lists saved templates', expected: 'Lists', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH35', title: 'Can use custom template', expected: 'Uses', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH36', title: 'Template variables replaced', expected: 'Replaced', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH37', title: 'Template use count increments', expected: 'Increments', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH38', title: 'Edit template modal opens', expected: 'Opens', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH39', title: 'Can update template', expected: 'Updates', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH40', title: 'Can delete template', expected: 'Deletes', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH41', title: 'Max 10 templates enforced', expected: 'Enforced', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH42', title: 'Duplicate names rejected', expected: 'Rejected', steps: 'Automated', launch: '#share', note: 'Playwright' },
-        { id: 'SH43', title: 'Template help toggles', expected: 'Toggles', steps: 'Automated', launch: '#share', note: 'Playwright' }
-    ]},
-    
-    // ========== WORKFLOW TESTS (WF1-WF18) ==========
-    { id: 'workflow', name: 'User Workflows', icon: '🚀', tests: [
-        // WF1: New User from Invite
-        { id: 'WF1', title: 'Referral link captures code', expected: 'Code stored', steps: '1. Click referral link\n2. Check sessionStorage', launch: '?fresh=1#ref=TEST', note: 'Target: Code saved' },
-        { id: 'WF2', title: 'New user log first game - tap count', expected: '≤5 taps after onboarding', steps: '1. Fresh user landing\n2. Complete onboarding\n3. Log first game\n4. COUNT TAPS', launch: '?fresh=1', note: 'Target: ≤5 taps' },
-        { id: 'WF3', title: 'Referrer info shown on landing', expected: '"Dave invited you" banner', steps: '1. Click referral link\n2. Look for referrer name/banner', launch: '?fresh=1#ref=DAVE', note: 'UX: Show who invited' },
-        { id: 'WF4', title: 'Clipboard auto-detected', expected: 'Prompt appears', steps: '1. Copy Wordle result\n2. Open app\n3. Check for auto-prompt', launch: '', note: 'Target: <2 sec' },
-        
-        // WF2: Daily Return User
-        { id: 'WF5', title: 'Progress visible without scrolling', expected: 'Above fold', steps: '1. Open app (returning user)\n2. Check if progress in viewport', launch: '#home', note: 'No scroll needed' },
-        { id: 'WF6', title: 'Log button visible without scrolling', expected: 'In viewport', steps: '1. Open app\n2. Check if Log button visible', launch: '#home', note: 'No scroll needed' },
-        { id: 'WF7', title: 'Log game in ≤3 taps', expected: '≤3 taps', steps: '1. Tap Log\n2. Paste result\n3. Confirm\nCOUNT TAPS', launch: '#home', note: 'Target: ≤3 taps' },
-        { id: 'WF8', title: 'Log game under 30 seconds', expected: '<30s', steps: '1. Start timer\n2. Log a game\n3. Check time', launch: '', note: 'Target: <30s' },
-        
-        // WF3: Social Engagement
-        { id: 'WF9', title: 'See friends in ≤2 taps', expected: '≤2 taps', steps: '1. From home\n2. Navigate to friends\nCOUNT TAPS', launch: '#home', note: 'Target: ≤2 taps' },
-        { id: 'WF10', title: 'Score comparison available', expected: 'Can see vs friends', steps: '1. Go to Social\n2. Look for score comparisons', launch: '#social', note: 'Show: "You 4/6 vs Dave 3/6"' },
-        { id: 'WF11', title: 'Start battle in ≤4 taps', expected: '≤4 taps', steps: '1. Social tab\n2. Create Battle\n3. Select game\n4. Confirm\nCOUNT TAPS', launch: '#home', note: 'Target: ≤4 taps' },
-        
-        // WF4: Battle Join Flow
-        { id: 'WF12', title: 'Battle link shows details', expected: 'Details visible', steps: '1. Click battle link\n2. Check for battle info', launch: '#battle=ABC123', note: 'Show: games, duration, stakes' },
-        { id: 'WF13', title: 'Battle join shows games/duration/stakes', expected: 'All info shown', steps: '1. Open battle link\n2. Check for: games, duration, entry fee', launch: '#battle=ABC123', note: 'User knows what they join' },
-        { id: 'WF14', title: 'Join battle in ≤2 taps', expected: '≤2 taps', steps: '1. Click Join\n2. Confirm\nCOUNT TAPS', launch: '#battle=ABC123', note: 'Target: ≤2 taps' },
-        
-        // WF5: Share Flow
-        { id: 'WF15', title: 'Share tab discoverable', expected: 'Easy to find', steps: '1. Open app\n2. Look for Share option', launch: '#home', note: 'In nav or on home' },
-        { id: 'WF16', title: 'Default message has scores', expected: 'Scores included', steps: '1. Go to Share\n2. Check default message', launch: '#share', note: 'Good message by default' },
-        { id: 'WF17', title: 'Share to Twitter in ≤3 taps', expected: '≤3 taps', steps: '1. Share tab\n2. Click Twitter\nCOUNT TAPS', launch: '#home', note: 'Target: ≤3 taps' },
-        { id: 'WF18', title: 'All share platforms visible', expected: '3+ platforms', steps: '1. Go to Share\n2. Count share options', launch: '#share', note: 'Twitter, Copy, Email, SMS' }
+    // ========== W: PERFORMANCE (W1-W5) ==========
+    { id: 'performance', name: 'Performance', icon: '⏱️', tests: [
+        { id: 'W1', title: 'Initial page load under 3 seconds', expected: '<3s on 3G', steps: 'Measure load time', launch: '', note: 'Lean Test' },
+        { id: 'W2', title: 'Tab switch under 300ms', expected: '<300ms', steps: 'Measure tab switch time', launch: '', note: 'Lean Test' },
+        { id: 'W3', title: 'History with 100 entries loads fast', expected: '<5s', steps: 'Load 100 day history', launch: '', note: 'Lean Test' },
+        { id: 'W4', title: 'No memory leak on navigation', expected: '<3x memory growth', steps: 'Navigate 20 times, check memory', launch: '', note: 'Lean Test' },
+        { id: 'W5', title: 'Large clipboard content handled', expected: '<2s parse time', steps: 'Paste 1000 line content', launch: '#log', note: 'Lean Test' }
     ]}
 ];
-
-// Export for use
 
 // ========== STATE ==========
 let currentUser = null;
@@ -1114,14 +1076,6 @@ let currentSection = null;
 let currentTab = 'testing';
 let consoleLogs = [];
 let debugPanelVisible = false;
-
-// Playwright integration
-let playwrightResults = {};
-let playwrightSummary = null;
-
-// ID mapping: Test Plan ID -> Playwright ID(s)
-// After sync, all IDs match directly - no mapping needed
-const PLAYWRIGHT_ID_MAP = {};
 let automationRunning = false;
 let sessionStart = Date.now();
 let detectedPlatform = null;
@@ -1182,13 +1136,14 @@ auth.onAuthStateChanged(async user => {
         isAdmin = ADMIN_EMAILS.includes(user.email);
         renderUserInfo();
         await loadData();
+        checkIssueParams(); // Check URL for direct issue link
         renderHeaderTabs();
         renderUI();
         updatePlatformUI();
         if (isAdmin) renderAdminPanel();
         renderAutomationTests();
-        loadSavedPlaywrightResults();
-        initPlaywrightUI();
+        // Ensure correct tab is displayed (especially for direct links)
+        switchTab(currentTab);
     } else {
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('main-content').classList.add('hidden');
@@ -1214,7 +1169,7 @@ function renderUserInfo() {
 function renderHeaderTabs() {
     const tabs = [{ id: 'testing', label: '🧪 Tests' }];
     if (isAdmin) tabs.push({ id: 'admin', label: '👑 Admin' });
-    tabs.push({ id: 'debug', label: '🔧 Debug' }, { id: 'automation', label: '🤖 Auto' }, { id: 'reports', label: '📊 Reports' });
+    tabs.push({ id: 'debug', label: '🔧 Debug' }, { id: 'automation', label: '🤖 Auto' }, { id: 'reports', label: '📊 Reports' }, { id: 'issues', label: '🐛 Issues' });
     document.getElementById('header-tabs').innerHTML = tabs.map(t => 
         `<button class="header-tab ${t.id === currentTab ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.label}</button>`
     ).join('');
@@ -1223,10 +1178,11 @@ function renderHeaderTabs() {
 function switchTab(tab) {
     currentTab = tab;
     renderHeaderTabs();
-    ['testing', 'admin', 'debug', 'automation', 'reports'].forEach(t => 
+    ['testing', 'admin', 'debug', 'automation', 'reports', 'issues'].forEach(t => 
         document.getElementById(`tab-${t}`)?.classList.toggle('hidden', t !== tab)
     );
     if (tab === 'reports') renderReports();
+    if (tab === 'issues') loadIssues();
 }
 
 // ========== DATA ==========
@@ -1660,7 +1616,7 @@ function clearMetrics() { consoleLogs = []; sessionStart = Date.now(); updateMet
 function renderAutomationTests() {
     document.getElementById('automation-tests').innerHTML = TEST_SECTIONS.map(s => `
         <div class="section-header">${s.icon} ${s.name} <button class="select-all-btn" onclick="selectAutoSection('${s.id}')">All</button></div>
-        ${s.tests.map(t => `<label class="test-checkbox"><input type="checkbox" value="${t.id}" class="auto-test">${t.id}: ${t.title.substring(0, 25)}...${getPlaywrightBadge(t.id)}</label>`).join('')}
+        ${s.tests.map(t => `<label class="test-checkbox"><input type="checkbox" value="${t.id}" class="auto-test">${t.id}: ${t.title.substring(0, 25)}...</label>`).join('')}
     `).join('');
 }
 
@@ -1867,6 +1823,394 @@ function resetAutomation() {
     document.getElementById('automation-log').innerHTML = '<div class="info">[Ready] Automation runner reset</div>';
     updateAutoStatus('⏸️ Ready', 'Select tests and click Run');
     document.querySelectorAll('.auto-test').forEach(cb => cb.checked = false);
+}
+
+// ========== ISSUE REPORTING ==========
+let issuesData = [];
+let currentScreenshotData = null;
+
+// Load issues from Firebase
+async function loadIssues() {
+    const container = document.getElementById('issues-list');
+    if (!container) return;
+    
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray-500);">Loading issues...</div>';
+    
+    try {
+        // Check if user is authenticated
+        if (!currentUser) {
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray-500);">Please sign in to view issues</div>';
+            return;
+        }
+        
+        const snapshot = await db.ref('reported-issues').orderByChild('timestamp').once('value');
+        const data = snapshot.val() || {};
+        
+        issuesData = Object.entries(data).map(([id, issue]) => ({ id, ...issue }))
+            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
+        filterIssues();
+    } catch (e) {
+        console.error('Error loading issues:', e);
+        // Show more helpful error message
+        let errorMsg = 'Error loading issues';
+        if (e.code === 'PERMISSION_DENIED') {
+            errorMsg = 'Permission denied - Firebase rules may need updating';
+        } else if (e.message) {
+            errorMsg = `Error: ${e.message}`;
+        }
+        container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--danger);">${errorMsg}</div>`;
+    }
+}
+
+// Filter and render issues
+function filterIssues() {
+    const container = document.getElementById('issues-list');
+    const typeFilter = document.getElementById('filter-type').value;
+    const statusFilter = document.getElementById('filter-status').value;
+    const priorityFilter = document.getElementById('filter-priority').value;
+    const severityFilter = document.getElementById('filter-severity').value;
+    
+    let filtered = issuesData;
+    
+    if (typeFilter !== 'all') {
+        filtered = filtered.filter(i => (i.type || 'bug') === typeFilter);
+    }
+    if (statusFilter !== 'all') {
+        filtered = filtered.filter(i => (i.status || 'open') === statusFilter);
+    }
+    if (priorityFilter !== 'all') {
+        if (priorityFilter === 'none') {
+            filtered = filtered.filter(i => !i.priority);
+        } else {
+            filtered = filtered.filter(i => i.priority === priorityFilter);
+        }
+    }
+    if (severityFilter !== 'all') {
+        filtered = filtered.filter(i => i.severity === severityFilter);
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray-500);">No issues found</div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(issue => renderIssueCard(issue)).join('');
+}
+
+// Render a single issue card
+function renderIssueCard(issue) {
+    const typeIcons = { bug: '🐛', enhancement: '✨', feature: '💡', question: '❓' };
+    const typeLabels = { bug: 'Bug', enhancement: 'Enhancement', feature: 'Feature', question: 'Question' };
+    const severityIcons = { critical: '🔴', major: '🟠', minor: '🟡', cosmetic: '🟢', suggestion: '💡' };
+    const statusLabels = { 
+        open: '🔵 Open', 
+        triaged: '📋 Triaged',
+        'in-progress': '🟡 In Progress', 
+        'in-review': '🔍 In Review',
+        resolved: '🟢 Resolved', 
+        closed: '⚫ Closed',
+        'wont-fix': '🚫 Won\'t Fix',
+        duplicate: '📎 Duplicate'
+    };
+    const priorityLabels = {
+        p0: '🔴 P0',
+        p1: '🟠 P1',
+        p2: '🟡 P2',
+        p3: '🟢 P3',
+        p4: '⚪ P4'
+    };
+    const sectionIcons = { home: '🏠', games: '🎮', social: '👥', battles: '⚔️', share: '📤', log: '📋', settings: '⚙️', onboarding: '🎯', auth: '🔐', achievements: '🏆', rewards: '🎁', notifications: '🔔', other: '📱' };
+    
+    const type = issue.type || 'bug';
+    const status = issue.status || 'open';
+    const priority = issue.priority;
+    const timeAgo = getTimeAgo(issue.timestamp);
+    
+    return `
+        <div class="issue-card severity-${issue.severity} status-${status}" style="border-left: 4px solid ${type === 'bug' ? '#ef4444' : type === 'enhancement' ? '#6366f1' : type === 'feature' ? '#22c55e' : '#6b7280'};">
+            <div class="issue-header">
+                <div class="issue-title">
+                    <span style="margin-right: 6px;">${typeIcons[type] || '🐛'}</span>
+                    ${escapeHtml(issue.title)}
+                </div>
+                <div class="issue-badges">
+                    <span class="issue-badge type" style="background: ${type === 'bug' ? '#fef2f2' : type === 'enhancement' ? '#eef2ff' : type === 'feature' ? '#f0fdf4' : '#f9fafb'}; color: ${type === 'bug' ? '#dc2626' : type === 'enhancement' ? '#4f46e5' : type === 'feature' ? '#16a34a' : '#4b5563'};">${typeLabels[type]}</span>
+                    <span class="issue-badge section">${sectionIcons[issue.section] || '📱'} ${issue.section}</span>
+                    <span class="issue-badge severity">${severityIcons[issue.severity]} ${issue.severity}</span>
+                    ${priority ? `<span class="issue-badge priority" style="background: ${priority === 'p0' ? '#fef2f2' : priority === 'p1' ? '#fff7ed' : priority === 'p2' ? '#fefce8' : '#f0fdf4'}; color: ${priority === 'p0' ? '#dc2626' : priority === 'p1' ? '#ea580c' : priority === 'p2' ? '#ca8a04' : '#16a34a'}; font-weight: 600;">${priorityLabels[priority]}</span>` : ''}
+                    <span class="issue-badge status-${status}">${statusLabels[status] || status}</span>
+                </div>
+            </div>
+            <div class="issue-description">${escapeHtml(issue.description || '').substring(0, 200)}${(issue.description || '').length > 200 ? '...' : ''}</div>
+            <div class="issue-meta">
+                ${issue.screenshotUrl ? `<img src="${issue.screenshotUrl}" class="issue-screenshot-thumb" onclick="showImageModal('${issue.screenshotUrl}')" alt="Screenshot">` : ''}
+                <span>📱 ${issue.platform || 'Unknown'}</span>
+                <span>📦 ${issue.appVersion || '?'}</span>
+                <span>👤 ${issue.reporterName || 'Anonymous'}</span>
+                <span>🕐 ${timeAgo}</span>
+            </div>
+            ${isAdmin ? `
+                <div class="issue-actions" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200);">
+                    <select onchange="updateIssuePriority('${issue.id}', this.value)" style="padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 0.75rem;">
+                        <option value="" ${!priority ? 'selected' : ''}>Set Priority</option>
+                        <option value="p0" ${priority === 'p0' ? 'selected' : ''}>P0 - Critical</option>
+                        <option value="p1" ${priority === 'p1' ? 'selected' : ''}>P1 - High</option>
+                        <option value="p2" ${priority === 'p2' ? 'selected' : ''}>P2 - Medium</option>
+                        <option value="p3" ${priority === 'p3' ? 'selected' : ''}>P3 - Low</option>
+                        <option value="p4" ${priority === 'p4' ? 'selected' : ''}>P4 - Backlog</option>
+                    </select>
+                    <select onchange="updateIssueStatus('${issue.id}', this.value)" style="padding: 4px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 0.75rem;">
+                        <option value="open" ${status === 'open' ? 'selected' : ''}>🔵 Open</option>
+                        <option value="triaged" ${status === 'triaged' ? 'selected' : ''}>📋 Triaged</option>
+                        <option value="in-progress" ${status === 'in-progress' ? 'selected' : ''}>🟡 In Progress</option>
+                        <option value="in-review" ${status === 'in-review' ? 'selected' : ''}>🔍 In Review</option>
+                        <option value="resolved" ${status === 'resolved' ? 'selected' : ''}>🟢 Resolved</option>
+                        <option value="closed" ${status === 'closed' ? 'selected' : ''}>⚫ Closed</option>
+                        <option value="wont-fix" ${status === 'wont-fix' ? 'selected' : ''}>🚫 Won't Fix</option>
+                        <option value="duplicate" ${status === 'duplicate' ? 'selected' : ''}>📎 Duplicate</option>
+                    </select>
+                    <button class="btn btn-sm btn-danger" onclick="deleteIssue('${issue.id}')" style="padding: 4px 8px;">🗑️</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// Handle screenshot file selection
+function handleScreenshotSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Screenshot too large (max 5MB)', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        currentScreenshotData = e.target.result;
+        showScreenshotPreview(currentScreenshotData);
+    };
+    reader.readAsDataURL(file);
+}
+
+// Handle paste from clipboard
+document.addEventListener('paste', (event) => {
+    // Only handle paste if issues tab is active
+    if (currentTab !== 'issues') return;
+    
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    
+    for (const item of items) {
+        if (item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentScreenshotData = e.target.result;
+                showScreenshotPreview(currentScreenshotData);
+            };
+            reader.readAsDataURL(file);
+            break;
+        }
+    }
+});
+
+// Show screenshot preview
+function showScreenshotPreview(dataUrl) {
+    const preview = document.getElementById('screenshot-preview');
+    preview.innerHTML = `
+        <img src="${dataUrl}" alt="Screenshot preview">
+        <button class="screenshot-remove" onclick="removeScreenshot(event)">×</button>
+    `;
+    preview.classList.add('has-image');
+}
+
+// Remove screenshot
+function removeScreenshot(event) {
+    event.stopPropagation();
+    currentScreenshotData = null;
+    const preview = document.getElementById('screenshot-preview');
+    preview.innerHTML = `
+        <div class="screenshot-placeholder">
+            <span style="font-size: 2rem;">📷</span>
+            <span>Click to add screenshot</span>
+            <span style="font-size: 0.7rem; color: var(--gray-400);">or paste from clipboard</span>
+        </div>
+    `;
+    preview.classList.remove('has-image');
+    document.getElementById('issue-screenshot').value = '';
+}
+
+// Submit issue
+async function submitIssue(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('submit-issue-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Submitting...';
+    
+    try {
+        const issue = {
+            section: document.getElementById('issue-section').value,
+            severity: document.getElementById('issue-severity').value,
+            platform: document.getElementById('issue-platform').value,
+            browser: document.getElementById('issue-browser').value || null,
+            title: document.getElementById('issue-title').value.trim(),
+            description: document.getElementById('issue-description').value.trim(),
+            steps: document.getElementById('issue-steps').value.trim() || null,
+            screenshotUrl: currentScreenshotData || null,
+            reporterId: currentUser?.uid || 'anonymous',
+            reporterName: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Anonymous',
+            reporterEmail: currentUser?.email || null,
+            status: 'open',
+            timestamp: Date.now()
+        };
+        
+        // Save to Firebase
+        await db.ref('reported-issues').push(issue);
+        
+        showToast('✅ Issue submitted successfully!', 'success');
+        clearIssueForm();
+        loadIssues();
+        
+    } catch (e) {
+        console.error('Error submitting issue:', e);
+        showToast('❌ Error submitting issue', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🐛 Submit Issue';
+    }
+}
+
+// Clear issue form
+function clearIssueForm() {
+    document.getElementById('issue-form').reset();
+    removeScreenshot({ stopPropagation: () => {} });
+    currentScreenshotData = null;
+}
+
+// Update issue status (admin only)
+async function updateIssueStatus(issueId, newStatus) {
+    if (!isAdmin) return;
+    
+    try {
+        await db.ref(`reported-issues/${issueId}`).update({
+            status: newStatus,
+            updatedAt: Date.now()
+        });
+        showToast(`Status updated to ${newStatus}`);
+        loadIssues();
+    } catch (e) {
+        console.error('Error updating issue:', e);
+        showToast('Error updating issue', 'error');
+    }
+}
+
+// Update issue priority (admin only - internal field)
+async function updateIssuePriority(issueId, newPriority) {
+    if (!isAdmin) return;
+    if (!newPriority) return; // Don't update if "Set Priority" selected
+    
+    try {
+        await db.ref(`reported-issues/${issueId}`).update({
+            priority: newPriority,
+            updatedAt: Date.now()
+        });
+        showToast(`Priority set to ${newPriority.toUpperCase()}`);
+        loadIssues();
+    } catch (e) {
+        console.error('Error updating priority:', e);
+        showToast('Error updating priority', 'error');
+    }
+}
+
+// Delete issue (admin only)
+async function deleteIssue(issueId) {
+    if (!isAdmin) return;
+    if (!confirm('Delete this issue permanently?')) return;
+    
+    try {
+        await db.ref(`reported-issues/${issueId}`).remove();
+        showToast('Issue deleted');
+        loadIssues();
+    } catch (e) {
+        console.error('Error deleting issue:', e);
+        showToast('Error deleting issue', 'error');
+    }
+}
+
+// Show image in modal
+function showImageModal(imageUrl) {
+    let modal = document.getElementById('image-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'image-modal';
+        modal.className = 'image-modal';
+        modal.innerHTML = `
+            <button class="image-modal-close" onclick="closeImageModal()">×</button>
+            <img src="" alt="Full size image">
+        `;
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeImageModal();
+        });
+        document.body.appendChild(modal);
+    }
+    
+    modal.querySelector('img').src = imageUrl;
+    modal.classList.add('visible');
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    if (modal) modal.classList.remove('visible');
+}
+
+// Helper: time ago
+function getTimeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(timestamp).toLocaleDateString();
+}
+
+// Helper: escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Check URL params for direct link to issues
+function checkIssueParams() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'issues' || params.get('report') === 'issue') {
+        currentTab = 'issues';
+        
+        // Prefill form if coming from PWA
+        if (params.get('prefill') === '1') {
+            setTimeout(() => {
+                if (params.get('section')) {
+                    const sectionEl = document.getElementById('issue-section');
+                    if (sectionEl) sectionEl.value = params.get('section');
+                }
+                if (params.get('severity')) {
+                    const severityEl = document.getElementById('issue-severity');
+                    if (severityEl) severityEl.value = params.get('severity');
+                }
+                if (params.get('title')) {
+                    const titleEl = document.getElementById('issue-title');
+                    if (titleEl) titleEl.value = decodeURIComponent(params.get('title'));
+                }
+            }, 100);
+        }
+    }
 }
 
 // ========== REPORTS ==========
@@ -2162,368 +2506,6 @@ ${tests.map(t => `
     toast('Puppeteer script downloaded');
 }
 
-// ========== PLAYWRIGHT INTEGRATION ==========
-
-function importPlaywrightFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            processPlaywrightResults(data);
-            toast('✅ Playwright results imported!');
-        } catch (err) {
-            toast('❌ Invalid JSON file: ' + err.message);
-            console.error('Import error:', err);
-        }
-    };
-    reader.readAsText(file);
-    
-    // Reset file input so same file can be re-imported
-    event.target.value = '';
-}
-
-function processPlaywrightResults(data) {
-    // Handle both our custom format and Playwright's native JSON format
-    let results = [];
-    let summary = {};
-    
-    if (data.results && Array.isArray(data.results)) {
-        // Our custom firebase-reporter format
-        results = data.results;
-        summary = data.summary || {};
-    } else if (data.suites && Array.isArray(data.suites)) {
-        // Playwright's native JSON reporter format
-        results = extractFromPlaywrightNative(data);
-        summary = {
-            total: results.length,
-            passed: results.filter(r => r.status === 'passed').length,
-            failed: results.filter(r => r.status === 'failed').length,
-            skipped: results.filter(r => r.status === 'skipped').length,
-            duration: data.stats?.duration || 0,
-            timestamp: new Date().toISOString()
-        };
-    } else {
-        throw new Error('Unrecognized JSON format');
-    }
-    
-    // Store results indexed by test ID
-    playwrightResults = {};
-    results.forEach(r => {
-        // Extract ID from title if needed
-        let id = r.id;
-        if (!id && r.title) {
-            const match = r.title.match(/^([A-Z]+\d+):/);
-            if (match) id = match[1];
-        }
-        if (id) {
-            playwrightResults[id] = {
-                status: r.status,
-                duration: r.duration,
-                error: r.error,
-                title: r.title
-            };
-        }
-    });
-    
-    playwrightSummary = summary;
-    
-    // Update UI
-    updatePlaywrightSummaryUI();
-    renderAutomationTests(); // Re-render to show badges
-    renderReports(); // Update reports if on that tab
-    updatePushButtonVisibility(); // Show Push button if on localhost
-    
-    // Save to localStorage for persistence
-    localStorage.setItem('playwrightResults', JSON.stringify(playwrightResults));
-    localStorage.setItem('playwrightSummary', JSON.stringify(playwrightSummary));
-}
-
-function extractFromPlaywrightNative(data) {
-    // Extract test results from Playwright's native JSON structure
-    const results = [];
-    
-    function walkSuites(suites) {
-        for (const suite of suites) {
-            if (suite.specs) {
-                for (const spec of suite.specs) {
-                    for (const test of spec.tests || []) {
-                        for (const result of test.results || []) {
-                            results.push({
-                                id: null, // Will extract from title
-                                title: spec.title,
-                                status: result.status,
-                                duration: result.duration,
-                                error: result.error?.message
-                            });
-                        }
-                    }
-                }
-            }
-            if (suite.suites) {
-                walkSuites(suite.suites);
-            }
-        }
-    }
-    
-    if (data.suites) walkSuites(data.suites);
-    return results;
-}
-
-function updatePlaywrightSummaryUI() {
-    const summaryEl = document.getElementById('playwright-summary');
-    const failuresEl = document.getElementById('playwright-failures');
-    
-    if (!playwrightSummary || !Object.keys(playwrightResults).length) {
-        summaryEl.style.display = 'none';
-        failuresEl.style.display = 'none';
-        return;
-    }
-    
-    summaryEl.style.display = 'block';
-    document.getElementById('pw-total').textContent = playwrightSummary.total || Object.keys(playwrightResults).length;
-    document.getElementById('pw-passed').textContent = playwrightSummary.passed || 0;
-    document.getElementById('pw-failed').textContent = playwrightSummary.failed || 0;
-    document.getElementById('pw-skipped').textContent = playwrightSummary.skipped || 0;
-    document.getElementById('pw-duration').textContent = formatDuration(playwrightSummary.duration || 0);
-    document.getElementById('pw-timestamp').textContent = playwrightSummary.timestamp ? 
-        new Date(playwrightSummary.timestamp).toLocaleString() : '';
-    
-    // Show failures
-    const failures = Object.entries(playwrightResults).filter(([id, r]) => r.status === 'failed');
-    if (failures.length > 0) {
-        failuresEl.style.display = 'block';
-        document.getElementById('pw-failure-list').innerHTML = failures.map(([id, r]) => `
-            <div style="padding: 8px; background: rgba(239,68,68,0.1); border-radius: 6px; margin-bottom: 6px; font-size: 0.8rem;">
-                <strong>${id}</strong>: ${r.title || ''}
-                ${r.error ? `<div style="color: var(--danger); margin-top: 4px; font-size: 0.75rem;">${escapeHtml(r.error.substring(0, 200))}</div>` : ''}
-            </div>
-        `).join('');
-    } else {
-        failuresEl.style.display = 'none';
-    }
-}
-
-function formatDuration(ms) {
-    if (ms < 1000) return ms + 'ms';
-    if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
-    return (ms / 60000).toFixed(1) + 'm';
-}
-
-function clearPlaywrightResults() {
-    playwrightResults = {};
-    playwrightSummary = null;
-    localStorage.removeItem('playwrightResults');
-    localStorage.removeItem('playwrightSummary');
-    updatePlaywrightSummaryUI();
-    renderAutomationTests();
-    toast('Playwright results cleared');
-}
-
-// ========== CLOUD SYNC FOR PLAYWRIGHT RESULTS ==========
-
-function isLocalhost() {
-    return window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' ||
-           window.location.port === '3000';
-}
-
-function initPlaywrightUI() {
-    const panel = document.getElementById('playwright-panel');
-    
-    if (isLocalhost()) {
-        // Localhost: Show full Playwright UI
-        if (panel) panel.style.display = 'block';
-        console.log('🤖 Playwright UI enabled (localhost mode)');
-    } else {
-        // GitHub hosted: Hide Playwright UI, auto-pull results
-        if (panel) panel.style.display = 'none';
-        console.log('🤖 Playwright UI hidden (GitHub mode) - will auto-pull results');
-        
-        // Auto-pull results from Firebase after auth
-        setTimeout(() => {
-            if (currentUser) {
-                autoPullPlaywrightResults();
-            }
-        }, 2000);
-    }
-}
-
-function updatePushButtonVisibility() {
-    const pushBtn = document.getElementById('push-results-btn');
-    if (pushBtn && isLocalhost()) {
-        // Show Push button only when there are results to push
-        pushBtn.style.display = Object.keys(playwrightResults).length > 0 ? 'inline-block' : 'none';
-    }
-}
-
-function showCloudStatus(message, isError = false) {
-    const statusEl = document.getElementById('cloud-status');
-    const textEl = document.getElementById('cloud-status-text');
-    if (statusEl && textEl) {
-        statusEl.style.display = 'block';
-        statusEl.style.background = isError ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)';
-        statusEl.style.borderLeft = `3px solid ${isError ? 'var(--danger)' : 'var(--success)'}`;
-        textEl.textContent = message;
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            statusEl.style.display = 'none';
-        }, 5000);
-    }
-}
-
-async function pushResultsToCloud() {
-    if (!currentUser) {
-        toast('Please sign in first');
-        return;
-    }
-    
-    if (!playwrightResults || Object.keys(playwrightResults).length === 0) {
-        toast('No results to push');
-        return;
-    }
-    
-    const pushBtn = document.getElementById('push-results-btn');
-    if (pushBtn) {
-        pushBtn.disabled = true;
-        pushBtn.textContent = '⏳ Pushing...';
-    }
-    
-    try {
-        const payload = {
-            results: playwrightResults,
-            summary: playwrightSummary,
-            pushedAt: new Date().toISOString(),
-            pushedBy: {
-                uid: currentUser.uid,
-                name: currentUser.displayName,
-                email: currentUser.email
-            },
-            environment: {
-                userAgent: navigator.userAgent,
-                url: window.location.href
-            }
-        };
-        
-        // Save to Firebase under /testplan/playwright-results/latest
-        await db.ref('testplan/playwright-results/latest').set(payload);
-        
-        // Also save to history with timestamp key
-        const historyKey = Date.now();
-        await db.ref(`testplan/playwright-results/history/${historyKey}`).set(payload);
-        
-        showCloudStatus(`✅ Pushed ${Object.keys(playwrightResults).length} results to cloud`);
-        toast('Results pushed to cloud!');
-        
-    } catch (error) {
-        console.error('Push error:', error);
-        showCloudStatus(`❌ Push failed: ${error.message}`, true);
-        toast('Failed to push results');
-    } finally {
-        if (pushBtn) {
-            pushBtn.disabled = false;
-            pushBtn.textContent = '☁️ Push to Cloud';
-        }
-    }
-}
-
-// Auto-pull for GitHub hosted version (silent, no UI)
-async function autoPullPlaywrightResults() {
-    if (!db) {
-        console.log('Firebase not ready, will retry...');
-        setTimeout(autoPullPlaywrightResults, 1000);
-        return;
-    }
-    
-    try {
-        console.log('🤖 Auto-pulling Playwright results from Firebase...');
-        const snapshot = await db.ref('testplan/playwright-results/latest').once('value');
-        const data = snapshot.val();
-        
-        if (!data || !data.results) {
-            console.log('No Playwright results in cloud');
-            return;
-        }
-        
-        // Load the results
-        playwrightResults = data.results;
-        playwrightSummary = data.summary || {
-            total: Object.keys(data.results).length,
-            passed: Object.values(data.results).filter(r => r.status === 'passed').length,
-            failed: Object.values(data.results).filter(r => r.status === 'failed').length,
-            skipped: Object.values(data.results).filter(r => r.status === 'skipped').length,
-            timestamp: data.pushedAt
-        };
-        
-        // Save to localStorage for persistence
-        localStorage.setItem('playwrightResults', JSON.stringify(playwrightResults));
-        localStorage.setItem('playwrightSummary', JSON.stringify(playwrightSummary));
-        
-        // Update badges in test lists
-        renderAutomationTests();
-        
-        const pushedBy = data.pushedBy?.name || 'Unknown';
-        const pushedAt = data.pushedAt ? new Date(data.pushedAt).toLocaleString() : 'Unknown';
-        console.log(`🤖 Loaded ${Object.keys(playwrightResults).length} Playwright results (by ${pushedBy} at ${pushedAt})`);
-        
-    } catch (error) {
-        console.error('Auto-pull error:', error);
-    }
-}
-
-function getPlaywrightStatus(testId) {
-    // Direct match
-    if (playwrightResults[testId]) {
-        return playwrightResults[testId];
-    }
-    
-    // Check ID mapping
-    const mappedId = PLAYWRIGHT_ID_MAP[testId];
-    if (mappedId && playwrightResults[mappedId]) {
-        return playwrightResults[mappedId];
-    }
-    
-    return null;
-}
-
-function getPlaywrightBadge(testId) {
-    const result = getPlaywrightStatus(testId);
-    if (!result) return '';
-    
-    const icon = result.status === 'passed' ? '✅' : 
-                 result.status === 'failed' ? '❌' : 
-                 result.status === 'skipped' ? '⏭️' : '⏱️';
-    const duration = result.duration ? ` (${formatDuration(result.duration)})` : '';
-    const title = `Playwright: ${result.status}${duration}`;
-    
-    return `<span class="pw-badge pw-${result.status}" title="${title}">🤖${icon}</span>`;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Load saved Playwright results on startup
-function loadSavedPlaywrightResults() {
-    try {
-        const saved = localStorage.getItem('playwrightResults');
-        const savedSummary = localStorage.getItem('playwrightSummary');
-        if (saved) {
-            playwrightResults = JSON.parse(saved);
-            playwrightSummary = savedSummary ? JSON.parse(savedSummary) : null;
-            updatePlaywrightSummaryUI();
-            updatePushButtonVisibility();
-        }
-    } catch (e) {
-        console.error('Error loading saved Playwright results:', e);
-    }
-}
-
 // ========== EXPORT ==========
 function exportJSON() {
     const data = {
@@ -2652,9 +2634,444 @@ function updatePlatformUI() {
 
 // Init
 detectedPlatform = detectPlatform();
-console.log('🧪 Test Plan v3 loaded');
+console.log('🧪 Test Plan v4 loaded');
 console.log('📱 Detected platform:', detectedPlatform, getPlatformIcon(detectedPlatform));
 setInterval(updateMetrics, 1000);
 </script>
 </body>
 </html>
+
+<!-- Playwright Runner Integration (embedded) -->
+<script>
+/**
+ * Playwright Runner - Adds real test execution to Auto tab
+ */
+(function() {
+  'use strict';
+  
+  const PLAYWRIGHT_SERVER = window.location.origin;
+  
+  const state = {
+    connected: false,
+    running: false,
+    currentRun: null,
+    eventSource: null,
+    results: {}
+  };
+  
+  function injectUI() {
+    const autoTab = document.getElementById('tab-automation');
+    if (!autoTab) { setTimeout(injectUI, 1000); return; }
+    if (document.getElementById('playwright-section')) return;
+    
+    const scriptsPanel = autoTab.querySelector('.panel:last-child');
+    
+    const section = document.createElement('div');
+    section.id = 'playwright-section';
+    section.className = 'panel';
+    section.style.borderLeft = '4px solid var(--primary)';
+    section.innerHTML = `
+      <h3>🎭 Playwright Runner</h3>
+      <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 12px;">
+        Run real automated tests. Results sync to Firebase.
+      </p>
+      
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--gray-50); border-radius: 6px; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="pw-status-dot" style="width: 10px; height: 10px; border-radius: 50%; background: var(--gray-300);"></span>
+          <span id="pw-status-text" style="font-size: 0.85rem;">Connecting...</span>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="PlaywrightRunner.reconnect()">🔄 Reconnect</button>
+      </div>
+      
+      <div class="form-row" style="margin-bottom: 12px;">
+        <div class="form-group">
+          <label>Browser</label>
+          <select id="pw-browser">
+            <option value="all">🌐 All Platforms</option>
+            <option value="chromium">🖥️ Chrome (Desktop)</option>
+            <option value="firefox">🦊 Firefox (Desktop)</option>
+            <option value="webkit">🧭 Safari (Desktop)</option>
+            <option value="Mobile Chrome">📱 Android (Pixel 5)</option>
+            <option value="Mobile Safari">📱 iPhone 12</option>
+            <option value="iPhone SE">📱 iPhone SE</option>
+            <option value="iPad">📱 iPad Pro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Options</label>
+          <div style="display: flex; gap: 12px; padding-top: 6px;">
+            <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
+              <input type="checkbox" id="pw-headed"> Headed
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer;">
+              <input type="checkbox" id="pw-parallel"> Parallel
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+        <button id="pw-run-all" class="btn btn-primary" onclick="PlaywrightRunner.runAll()" disabled>🎭 Run All</button>
+        <button id="pw-run-selected" class="btn btn-secondary" onclick="PlaywrightRunner.runSelected()" disabled>🎭 Selected</button>
+        <button id="pw-run-smoke" class="btn btn-secondary" onclick="PlaywrightRunner.runSmoke()" disabled>🚀 Smoke</button>
+        <button id="pw-stop" class="btn btn-danger" onclick="PlaywrightRunner.stop()" disabled>⏹️ Stop</button>
+      </div>
+      
+      <div id="pw-progress" style="display: none; padding: 10px; background: var(--gray-50); border-radius: 6px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span id="pw-progress-text" style="font-size: 0.85rem; font-weight: 500;">Running...</span>
+          <span id="pw-progress-counts" style="font-size: 0.8rem;">✅ 0 ❌ 0</span>
+        </div>
+        <div style="height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden;">
+          <div id="pw-progress-bar" style="height: 100%; background: var(--success); width: 0%; transition: width 0.3s;"></div>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.75rem; font-weight: 500; color: var(--gray-500); display: block; margin-bottom: 6px;">BY SECTION</label>
+        <div id="pw-section-buttons" style="display: flex; gap: 4px; flex-wrap: wrap;"></div>
+      </div>
+      
+      <div id="pw-results-summary" style="display: none;">
+        <label style="font-size: 0.75rem; font-weight: 500; color: var(--gray-500); display: block; margin-bottom: 6px;">RESULTS</label>
+        <div id="pw-results-grid" style="display: flex; gap: 4px; flex-wrap: wrap; max-height: 100px; overflow-y: auto; padding: 8px; background: var(--gray-50); border-radius: 6px;"></div>
+      </div>
+    `;
+    
+    if (scriptsPanel) autoTab.insertBefore(section, scriptsPanel);
+    else autoTab.appendChild(section);
+    
+    populateSectionButtons();
+  }
+  
+  function populateSectionButtons() {
+    const container = document.getElementById('pw-section-buttons');
+    if (!container || typeof TEST_SECTIONS === 'undefined') return;
+    container.innerHTML = TEST_SECTIONS.map(s => 
+      `<button class="btn btn-sm btn-secondary pw-section-btn" onclick="PlaywrightRunner.runSection('${s.id}')" disabled title="${s.name}">${s.icon}</button>`
+    ).join('');
+  }
+  
+  function connect() {
+    if (state.eventSource) state.eventSource.close();
+    updateStatus('connecting');
+    
+    try {
+      state.eventSource = new EventSource(`${PLAYWRIGHT_SERVER}/api/events`);
+      
+      state.eventSource.onopen = () => {
+        state.connected = true;
+        updateStatus('connected');
+        enableButtons(true);
+        addLog('Connected to server', 'success');
+      };
+      
+      state.eventSource.onmessage = (e) => handleEvent(JSON.parse(e.data));
+      
+      state.eventSource.onerror = () => {
+        state.connected = false;
+        state.running = false;  // Reset running state
+        state.currentRun = null;
+        updateStatus('disconnected');
+        enableButtons(false);
+        showProgress(false);  // Hide progress bar
+        addLog('Server disconnected', 'warn');
+        setTimeout(connect, 5000);
+      };
+    } catch (e) {
+      updateStatus('disconnected');
+    }
+  }
+  
+  function handleEvent(event) {
+    switch (event.type) {
+      case 'run-started':
+        state.running = true;
+        state.currentRun = event.data;
+        showProgress(true);
+        addLog(`🎭 Started: ${event.data.project}`, 'info');
+        enableButtons(false);
+        document.getElementById('pw-stop').disabled = false;
+        break;
+      
+      case 'test-running':
+        // Show which test is currently running
+        if (event.data) {
+          const { testId, title, current, total } = event.data;
+          addLog(`🔄 [${current}/${total}] ${testId}: ${title}`, 'info');
+          
+          // Update progress bar
+          const bar = document.getElementById('pw-progress-bar');
+          const text = document.getElementById('pw-progress-text');
+          if (bar && total) bar.style.width = `${(current / total) * 100}%`;
+          if (text) text.textContent = `Running ${current}/${total}...`;
+        }
+        break;
+        
+      case 'test-complete':
+        handleResult(event.data);
+        break;
+        
+      case 'progress-update':
+        // Update from summary line when individual results weren't captured
+        if (event.data) {
+          state.currentRun = event.data;
+          addLog(`📊 Progress: ${event.data.passed} passed, ${event.data.failed} failed`, 'info');
+        }
+        break;
+        
+      case 'run-complete':
+        state.running = false;
+        state.currentRun = event.data;
+        showProgress(false);
+        addLog(`✅ Done: ${event.data.passed} passed, ${event.data.failed} failed`, 'success');
+        saveRunToFirebase(event.data);
+        updateResultsGrid();
+        enableButtons(true);
+        break;
+        
+      case 'run-stopped':
+        state.running = false;
+        showProgress(false);
+        addLog('⏹️ Stopped', 'warn');
+        enableButtons(true);
+        break;
+    }
+    updateProgress();
+  }
+  
+  function handleResult(result) {
+    // Check if we already processed this result (avoid double-counting)
+    const existing = state.results[result.testId];
+    const isNew = !existing;
+    
+    state.results[result.testId] = result;
+    const icon = result.status === 'pass' ? '✅' : result.status === 'fail' ? '❌' : '⏭️';
+    addLog(`${icon} ${result.testId}: ${result.title} (${Math.round(result.duration)}ms)`, 
+           result.status === 'pass' ? 'success' : result.status === 'fail' ? 'error' : 'info');
+    saveResultToFirebase(result);
+    updateBadge(result.testId, result.status);
+    
+    // Update currentRun counters for live progress display
+    if (isNew && state.currentRun) {
+      if (result.status === 'pass') {
+        state.currentRun.passed = (state.currentRun.passed || 0) + 1;
+      } else if (result.status === 'fail') {
+        state.currentRun.failed = (state.currentRun.failed || 0) + 1;
+      } else {
+        state.currentRun.skipped = (state.currentRun.skipped || 0) + 1;
+      }
+    }
+    
+    updateProgress();
+  }
+  
+  function updateStatus(s) {
+    const dot = document.getElementById('pw-status-dot');
+    const text = document.getElementById('pw-status-text');
+    if (!dot || !text) return;
+    
+    if (s === 'connected') {
+      dot.style.background = 'var(--success)';
+      text.textContent = 'Connected to Playwright server';
+    } else if (s === 'connecting') {
+      dot.style.background = 'var(--warning)';
+      text.textContent = 'Connecting...';
+    } else {
+      dot.style.background = 'var(--danger)';
+      text.innerHTML = 'Server stopped. <a href="#" onclick="alert(\'Run in terminal:\\n\\nnpm start\\n\\nThen click Reconnect\');return false;" style="color: var(--primary);">Restart?</a>';
+    }
+  }
+  
+  function enableButtons(enabled) {
+    const canRun = enabled && state.connected && !state.running;
+    ['pw-run-all', 'pw-run-selected', 'pw-run-smoke'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.disabled = !canRun;
+    });
+    document.querySelectorAll('.pw-section-btn').forEach(btn => btn.disabled = !canRun);
+    
+    // Stop button: only enabled when connected AND running
+    const stopBtn = document.getElementById('pw-stop');
+    if (stopBtn) stopBtn.disabled = !(state.connected && state.running);
+  }
+  
+  function showProgress(show) {
+    const el = document.getElementById('pw-progress');
+    if (el) el.style.display = show ? 'block' : 'none';
+  }
+  
+  function updateProgress() {
+    if (!state.currentRun) return;
+    const run = state.currentRun;
+    const total = run.passed + run.failed + run.skipped;
+    
+    const text = document.getElementById('pw-progress-text');
+    const counts = document.getElementById('pw-progress-counts');
+    const bar = document.getElementById('pw-progress-bar');
+    
+    if (text) text.textContent = `Running... ${total}`;
+    if (counts) counts.textContent = `✅ ${run.passed} ❌ ${run.failed}`;
+    if (bar) bar.style.width = `${Math.min(total * 3, 100)}%`;
+  }
+  
+  function updateResultsGrid() {
+    const container = document.getElementById('pw-results-grid');
+    const summary = document.getElementById('pw-results-summary');
+    if (!container || !summary) return;
+    
+    const results = Object.entries(state.results);
+    if (results.length === 0) { summary.style.display = 'none'; return; }
+    
+    summary.style.display = 'block';
+    container.innerHTML = results.map(([id, r]) => {
+      const bg = r.status === 'pass' ? '#dcfce7' : r.status === 'fail' ? '#fee2e2' : '#f3f4f6';
+      const color = r.status === 'pass' ? '#166534' : r.status === 'fail' ? '#991b1b' : '#374151';
+      return `<div style="padding: 4px 8px; background: ${bg}; color: ${color}; border-radius: 4px; font-size: 0.7rem; font-weight: 500; cursor: pointer;" onclick="scrollToTestCard('${id}')">${id}</div>`;
+    }).join('');
+  }
+  
+  function updateBadge(testId, status) {
+    const card = document.querySelector(`[data-test-id="${testId}"]`);
+    if (!card) return;
+    
+    let badge = card.querySelector('.pw-badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'pw-badge';
+      badge.style.cssText = 'position: absolute; top: 4px; right: 4px; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; z-index: 5;';
+      card.style.position = 'relative';
+      card.appendChild(badge);
+    }
+    
+    badge.textContent = status === 'pass' ? '🎭✅' : status === 'fail' ? '🎭❌' : '🎭⏭️';
+    badge.style.background = status === 'pass' ? '#dcfce7' : status === 'fail' ? '#fee2e2' : '#f3f4f6';
+  }
+  
+  function addLog(msg, type = 'info') {
+    const log = document.getElementById('automation-log');
+    if (!log) return;
+    const line = document.createElement('div');
+    line.className = type;
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+  
+  async function runTests(testIds = []) {
+    if (!state.connected) { toast('Not connected'); return; }
+    if (state.running) { toast('Already running'); return; }
+    
+    try {
+      const response = await fetch(`${PLAYWRIGHT_SERVER}/api/run-tests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tests: testIds,
+          project: document.getElementById('pw-browser')?.value || 'chromium',
+          headed: document.getElementById('pw-headed')?.checked || false,
+          workers: document.getElementById('pw-parallel')?.checked ? 2 : 1
+        })
+      });
+      
+      if (!response.ok) toast('Error starting tests');
+    } catch (e) {
+      toast('Server not running');
+    }
+  }
+  
+  async function stopTests() {
+    try { await fetch(`${PLAYWRIGHT_SERVER}/api/stop-tests`, { method: 'POST' }); } catch {}
+  }
+  
+  function saveResultToFirebase(result) {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+    firebase.database().ref(`automated-results/${result.testId}`).set({
+      testId: result.testId,
+      status: result.status,
+      duration: result.duration,
+      timestamp: new Date().toISOString(),
+      automated: true,
+      project: state.currentRun?.project || 'unknown'
+    }).catch(() => {});
+  }
+  
+  function saveRunToFirebase(run) {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+    firebase.database().ref(`automated-runs/${run.id}`).set({
+      id: run.id,
+      startTime: run.startTime,
+      endTime: run.endTime,
+      duration: run.duration,
+      status: run.status,
+      passed: run.passed,
+      failed: run.failed,
+      skipped: run.skipped,
+      project: run.project
+    }).catch(() => {});
+  }
+  
+  function loadFromFirebase() {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+    firebase.database().ref('automated-results').once('value')
+      .then(snap => {
+        const results = snap.val() || {};
+        state.results = results;
+        Object.entries(results).forEach(([id, r]) => updateBadge(id, r.status));
+        updateResultsGrid();
+      }).catch(() => {});
+  }
+  
+  function getSelected() {
+    return Array.from(document.querySelectorAll('.auto-test:checked')).map(cb => cb.value);
+  }
+  
+  function getSectionTests(sectionId) {
+    if (typeof TEST_SECTIONS === 'undefined') return [];
+    const section = TEST_SECTIONS.find(s => s.id === sectionId);
+    return section ? section.tests.map(t => t.id) : [];
+  }
+  
+  window.PlaywrightRunner = {
+    runAll: () => runTests([]),
+    runSelected: () => {
+      const selected = getSelected();
+      if (selected.length === 0) { toast('Select tests first'); return; }
+      runTests(selected);
+    },
+    runSmoke: () => runTests(['A1', 'A5', 'B1', 'B2', 'H1']),
+    runSection: (id) => runTests(getSectionTests(id)),
+    stop: stopTests,
+    reconnect: () => { addLog('Reconnecting...', 'info'); connect(); }
+  };
+  
+  window.scrollToTestCard = function(testId) {
+    const card = document.querySelector(`[data-test-id="${testId}"]`);
+    if (card) {
+      if (typeof switchTab === 'function') switchTab('testing');
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.outline = '3px solid var(--primary)';
+        setTimeout(() => card.style.outline = '', 2000);
+      }, 100);
+    }
+  };
+  
+  function init() {
+    injectUI();
+    connect();
+    setTimeout(loadFromFirebase, 1000);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 500));
+  } else {
+    setTimeout(init, 500);
+  }
+  
+  const style = document.createElement('style');
+  style.textContent = '#playwright-section .btn:disabled { opacity: 0.5; cursor: not-allowed; }';
+  document.head.appendChild(style);
+})();
+</script>
